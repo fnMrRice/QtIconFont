@@ -57,12 +57,12 @@ QtIconFont::~QtIconFont() {
     delete d;
 }
 
-bool QtIconFont::HasIconFont(const QString &font_family) {
-    return QtIconFontPrivate::loaded_fonts.contains(font_family);
+bool QtIconFont::HasIconFont(const QString &font_name) {
+    return QtIconFontPrivate::loaded_fonts.contains(font_name);
 }
 
-QtIconFont *QtIconFont::GetIconFont(const QString &font_family) {
-    return QtIconFontPrivate::loaded_fonts.value(font_family, nullptr);
+QtIconFont *QtIconFont::GetIconFont(const QString &font_name) {
+    return QtIconFontPrivate::loaded_fonts.value(font_name, nullptr);
 }
 
 void QtIconFont::setAliasName(const QString &alias) {
@@ -82,6 +82,16 @@ QString QtIconFont::aliasName() const {
 bool QtIconFont::isValid() const {
     Q_D(const QtIconFont);
     return !d->font_family.isEmpty();
+}
+
+QString QtIconFont::fontName() const {
+    Q_D(const QtIconFont);
+    return d->font_name;
+}
+
+QString QtIconFont::description() const {
+    Q_D(const QtIconFont);
+    return d->description;
 }
 
 QString QtIconFont::fontFamily() const {
@@ -122,14 +132,14 @@ QChar QtIconFont::iconByClass(const QString &name) const {
     return FindIcon(d->font_class_map, name);
 }
 
-FontInfoPtr_t QtIconFont::fontInfoById(const QString &name) const {
+FontInfoPtr_t QtIconFont::fontInfoById(const QString &id) const {
     Q_D(const QtIconFont);
-    return FindInfo(d->icon_id_map, name);
+    return FindInfo(d->icon_id_map, id);
 }
 
-QChar QtIconFont::iconById(const QString &name) const {
+QChar QtIconFont::iconById(const QString &id) const {
     Q_D(const QtIconFont);
-    return FindIcon(d->icon_id_map, name);
+    return FindIcon(d->icon_id_map, id);
 }
 
 bool QtIconFontPrivate::openFile(QFile *file) {
