@@ -24,6 +24,14 @@ class QtIconFont : public QObject {
     using FontInfoPtr_t = QSharedPointer<FontInfo_t>;
 
  public:
+    [[nodiscard]] static bool HasIconFont(const QString &font_family);
+    [[nodiscard]] static QtIconFont *GetIconFont(const QString &font_family);
+
+ public:
+    void setAliasName(const QString &alias);
+    [[nodiscard]] QString aliasName() const;
+
+ public:
     [[nodiscard]] bool isValid() const;
     [[nodiscard]] QString fontFamily() const;
     [[nodiscard]] QFont font() const;

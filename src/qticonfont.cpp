@@ -14,33 +14,69 @@ class QtIconFontPrivate {
     QString font_name;
     QString description;
     QString font_family;
+    QString alias_name;
     QMap<QString, FontInfoPtr_t> icon_id_map;
     QMap<QString, FontInfoPtr_t> name_map;
     QMap<QString, FontInfoPtr_t> font_class_map;
 
  public:
+    static QMap<QString, QtIconFont *> loaded_fonts;
+
+ public:
     static bool openFile(QFile *file);
     static FontInfoPtr_t ReadFontInfo(const QJsonObject &obj);
     bool parseJsonData(const QByteArray &data, const QString &file_name);
-    void loadFontFromFile(QFile *font, QFile *json);
+    bool loadFontFromFile(QFile *font, QFile *json);
 };
+
+QMap<QString, QtIconFont *> QtIconFontPrivate::loaded_fonts;
 
 QtIconFont::QtIconFont(const QString &font, const QString &json, QObject *parent)
     : QObject(parent), d_ptr(new QtIconFontPrivate) {
     Q_D(QtIconFont);
     auto font_file = new QFile(font);
     auto json_file = new QFile(json);
-    d->loadFontFromFile(font_file, json_file);
+    if (!d->loadFontFromFile(font_file, json_file)) return;
+    d->alias_name = d->font_name;
+    QtIconFontPrivate::loaded_fonts.insert(d->alias_name, this);
 }
 
 QtIconFont::QtIconFont(QFile *font, QFile *json, QObject *parent)
     : QObject(parent), d_ptr(new QtIconFontPrivate) {
     Q_D(QtIconFont);
-    d->loadFontFromFile(font, json);
+    if (!d->loadFontFromFile(font, json)) return;
+    d->alias_name = d->font_name;
+    QtIconFontPrivate::loaded_fonts.insert(d->alias_name, this);
 }
 
 QtIconFont::~QtIconFont() {
-    delete d_ptr;
+    Q_D(QtIconFont);
+    if (!d->font_family.isEmpty()) {
+        QtIconFontPrivate::loaded_fonts.remove(d->font_family);
+    }
+    delete d;
+}
+
+bool QtIconFont::HasIconFont(const QString &font_family) {
+    return QtIconFontPrivate::loaded_fonts.contains(font_family);
+}
+
+QtIconFont *QtIconFont::GetIconFont(const QString &font_family) {
+    return QtIconFontPrivate::loaded_fonts.value(font_family, nullptr);
+}
+
+void QtIconFont::setAliasName(const QString &alias) {
+    Q_D(QtIconFont);
+    auto iter = QtIconFontPrivate::loaded_fonts.find(d->alias_name);
+    if (iter != QtIconFontPrivate::loaded_fonts.end()) {
+        QtIconFontPrivate::loaded_fonts.erase(iter);
+    }
+    QtIconFontPrivate::loaded_fonts.insert(alias, this);
+}
+
+QString QtIconFont::aliasName() const {
+    Q_D(const QtIconFont);
+    return d->alias_name;
 }
 
 bool QtIconFont::isValid() const {
@@ -157,9 +193,9 @@ bool QtIconFontPrivate::parseJsonData(const QByteArray &data, const QString &fil
     return true;
 }
 
-void QtIconFontPrivate::loadFontFromFile(QFile *font, QFile *json) {
-    if (!openFile(font)) return;
-    if (!openFile(json)) return;
+bool QtIconFontPrivate::loadFontFromFile(QFile *font, QFile *json) {
+    if (!openFile(font)) return false;
+    if (!openFile(json)) return false;
     font->seek(0);
     json->seek(0);
     auto font_data = font->readAll();
@@ -167,12 +203,13 @@ void QtIconFontPrivate::loadFontFromFile(QFile *font, QFile *json) {
     font->close();
     json->close();
 
-    if (!this->parseJsonData(json_data, json->fileName())) return;
+    if (!this->parseJsonData(json_data, json->fileName())) return false;
     auto id = QFontDatabase::addApplicationFontFromData(font_data);
     QStringList families = QFontDatabase::applicationFontFamilies(id);
     if (families.empty()) {
         qWarning("[QtIconFont] Cannot load font from file: %s", qUtf8Printable(font->fileName()));
-        return;
+        return false;
     }
     this->font_family = families.first();
+    return true;
 }
