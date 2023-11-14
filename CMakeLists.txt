@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(QtIconFont VERSION 1.0)
+project(QtWidgets VERSION 1.0)
 
 # ------ begin options
 option(BUILD_TEST "Build test" OFF)
@@ -34,14 +34,21 @@ add_compile_definitions(
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 # ------ end dependencies
 
-add_library(QtIconFont STATIC
+add_library(QtWidgets STATIC
             include/QtIconFont
             include/qticonfont.h
-            src/qticonfont.cpp)
-target_link_libraries(QtIconFont PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets)
-target_include_directories(QtIconFont PUBLIC include)
+            src/qticonfont.cpp
+
+            include/QtImageWidget
+            include/qtimagewidget.h
+            src/qtimagewidget.cpp)
+target_link_libraries(QtWidgets PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets)
+target_include_directories(QtWidgets PUBLIC include)
 
 if (BUILD_TEST)
-    add_executable(QtIconFont_test tests/main.cpp)
-    target_link_libraries(QtIconFont_test PRIVATE QtIconFont)
+    add_executable(QtIconFont_test tests/iconfont.cpp)
+    target_link_libraries(QtIconFont_test PRIVATE QtWidgets)
+
+    add_executable(QtImageWidget_test tests/imagewidget.cpp)
+    target_link_libraries(QtImageWidget_test PRIVATE QtWidgets)
 endif ()
