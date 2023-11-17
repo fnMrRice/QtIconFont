@@ -2,8 +2,11 @@
 #define QTICONFONT_SRC_QTIMAGEWIDGET_H_
 
 #include <QWidget>
+#include "namespace.h"
 
-class QtImageWidgetPrivate;
+FNRICE_QT_WIDGETS_FORWARD_DECLARE_CLASS(QtImageWidgetPrivate)
+
+FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
 class QtImageWidget : public QWidget {
  Q_OBJECT
@@ -117,5 +120,7 @@ class QtImageWidget : public QWidget {
     Q_DECLARE_PRIVATE(QtImageWidget);
     QtImageWidgetPrivate *d_ptr;
 };
+
+FNRICE_QT_WIDGETS_END_NAMESPACE
 
 #endif //QTICONFONT_SRC_QTIMAGEWIDGET_H_

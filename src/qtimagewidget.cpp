@@ -2,6 +2,8 @@
 #include <QPainter>
 #include <QPaintEvent>
 
+FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
+
 class QtImageWidgetPrivate {
  public:
     explicit QtImageWidgetPrivate(QtImageWidget *q) : q_ptr(q) {}
@@ -316,3 +318,5 @@ QSize QtImageWidgetPrivate::calculatePixmapSize() {
     }
     return size;
 }
+
+FNRICE_QT_WIDGETS_END_NAMESPACE

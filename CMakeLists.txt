@@ -3,6 +3,11 @@ project(QtWidgets VERSION 1.0)
 
 # ------ begin options
 option(BUILD_TEST "Build test" OFF)
+option(QT_WIDGETS_DISABLE_NAMESPACE "Disable namespace" OFF)
+option(QT_WIDGETS_USING_CUSTOM_NAMESPACE "Using custom namespace" OFF)
+if (QT_WIDGETS_USING_CUSTOM_NAMESPACE)
+    set(QT_WIDGETS_DISABLE_NAMESPACE "" CACHE STRING "Custom namespace")
+endif ()
 # ------ end options
 
 # ------ begin cmake config
@@ -30,23 +35,31 @@ add_compile_definitions(
 )
 # ------ end cmake config
 
+# ------ begin configure files
+configure_file(cmake/config.h.in ${PROJECT_SOURCE_DIR}/include/config.h)
+# ------ end configure files
+
 # ------ begin dependencies
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 # ------ end dependencies
 
-add_library(QtWidgets STATIC
-            include/QtIconFont
-            include/qticonfont.h
-            src/qticonfont.cpp
-
-            include/QtImageWidget
-            include/qtimagewidget.h
-            src/qtimagewidget.cpp)
+add_library(QtWidgets STATIC)
 target_link_libraries(QtWidgets PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets)
 target_include_directories(QtWidgets PUBLIC include)
 
+target_sources(QtWidgets INTERFACE
+               include/QtIconFont
+               include/QtImageWidget)
+target_sources(QtWidgets PUBLIC
+               include/qticonfont.h
+               include/qtimagewidget.h)
+target_sources(QtWidgets PRIVATE
+               src/qticonfont.cpp
+               src/qtimagewidget.cpp)
+
 if (BUILD_TEST)
-    add_executable(QtIconFont_test tests/iconfont.cpp)
+    add_executable(QtIconFont_test tests/iconfont.cpp
+                   include/namespace.h)
     target_link_libraries(QtIconFont_test PRIVATE QtWidgets)
 
     add_executable(QtImageWidget_test tests/imagewidget.cpp)

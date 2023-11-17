@@ -2,9 +2,12 @@
 #define QTICONFONT_SRC_QTICONFONT_H_
 
 #include <QObject>
+#include "namespace.h"
 
-class QFile;
-class QtIconFontPrivate;
+QT_FORWARD_DECLARE_CLASS(QFile)
+FNRICE_QT_WIDGETS_FORWARD_DECLARE_CLASS(QtIconFontPrivate)
+
+FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
 class QtIconFont : public QObject {
  Q_OBJECT
@@ -116,5 +119,7 @@ class QtIconFont : public QObject {
     Q_DECLARE_PRIVATE(QtIconFont);
     QtIconFontPrivate *d_ptr;
 };
+
+FNRICE_QT_WIDGETS_END_NAMESPACE
 
 #endif //QTICONFONT_SRC_QTICONFONT_H_

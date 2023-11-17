@@ -6,6 +6,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
+
 using FontInfo_t = QtIconFont::FontInfo_t;
 using FontInfoPtr_t = QtIconFont::FontInfoPtr_t;
 
@@ -223,3 +225,5 @@ bool QtIconFontPrivate::loadFontFromFile(QFile *font, QFile *json) {
     this->font_family = families.first();
     return true;
 }
+
+FNRICE_QT_WIDGETS_END_NAMESPACE

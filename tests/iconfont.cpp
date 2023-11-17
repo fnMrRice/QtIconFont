@@ -3,6 +3,8 @@
 #include <QLabel>
 #include <QTimer>
 
+FNRICE_QT_WIDGETS_USE_NAMESPACE
+
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 
