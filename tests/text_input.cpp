@@ -5,6 +5,7 @@
 #include <QToolButton>
 #include <QPushButton>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 
 FNRICE_QT_WIDGETS_USE_NAMESPACE
 
@@ -43,6 +44,7 @@ int main(int argc, char *argv[]) {
     w->setObjectName("widget");
     w->resize(640, 480);
     w->setStyleSheet(kTestStyleSheet);
+    auto *l = new QVBoxLayout(w);
 
     auto *l_btn = new QToolButton;
     l_btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -57,12 +59,11 @@ int main(int argc, char *argv[]) {
 
     auto *text_input = new QtTextInput(w);
     text_input->setObjectName("text_input");
-    text_input->move(20, 20);
     text_input->setLeftButton(l_btn);
+    l->addWidget(text_input);
 
     auto *text_input2 = new QtTextInput(w);
     text_input->setObjectName("text_input2");
-    text_input2->move(20, 80);
     text_input2->setRightButton(r_btn);
     text_input2->setEchoMode(QLineEdit::Password);
     QObject::connect(r_btn, &QAbstractButton::toggled, text_input2, [&](bool checked) {
@@ -72,12 +73,13 @@ int main(int argc, char *argv[]) {
             text_input2->setEchoMode(QLineEdit::Password);
         }
     });
+    l->addWidget(text_input2);
 
     auto *text_input3 = new QtTextInput(w);
     text_input->setObjectName("text_input3");
-    text_input3->move(20, 140);
     text_input3->setReadOnly(true);
     text_input3->setText("123456");
+    l->addWidget(text_input3);
 
     auto *buttons = new QWidget(w);
     auto *layout = new QHBoxLayout(buttons);
@@ -105,7 +107,7 @@ int main(int argc, char *argv[]) {
     layout->addWidget(btn_msg);
     layout->addWidget(btn_clear_err);
     layout->addWidget(btn_clear_msg);
-    buttons->move(20, 220);
+    l->addWidget(buttons);
 
     w->show();
 

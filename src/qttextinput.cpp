@@ -485,8 +485,7 @@ void QtTextInput::paintEvent(QPaintEvent *event) {
     painter.setBrush(d->p_bg);
 
     // draw rounded rect
-    auto rect = this->rect();
-    rect.setHeight(kDefaultHeight);
+    auto rect = d->input_container->rect();
 //    qDebug() << "event->rect()=" << event->rect() << "rect=" << rect;
     painter.drawRoundedRect(rect, this->borderRadius(), this->borderRadius());
 
@@ -558,8 +557,6 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->main_layout->setSpacing(kMessageSpacing);
 
     this->input_container = new QWidget;
-    this->input_container->setFixedHeight(kDefaultHeight);
-
     this->input_layout = new QHBoxLayout(this->input_container);
     this->input_layout->setContentsMargins(WITH_BORDER_INPUT_MARGINS);
     this->input_layout->setSpacing(kInputSpacing);
@@ -570,9 +567,9 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->main_layout->addWidget(this->info_label);
     this->main_layout->addWidget(this->error_label);
 
-    this->main_layout->setStretch(0, kDefaultHeight);
-    this->main_layout->setStretch(1, kHeightWithMessage - kDefaultHeight);
-    this->main_layout->setStretch(2, kHeightWithMessage - kDefaultHeight);
+    this->main_layout->setStretch(0, 1);
+    this->main_layout->setStretch(1, 0);
+    this->main_layout->setStretch(2, 0);
 
     this->copy_hint = new QLabel(q);
     this->copy_hint->setStyleSheet(kCopyHintStyleSheet);
@@ -704,23 +701,31 @@ void QtTextInputPrivate::createOrStopHeightAnim(bool isShow) {
     }
     this->msg_animation = new QParallelAnimationGroup(q);
 
+    QLabel *label = nullptr;
     auto *opacity_anim = new QPropertyAnimation(this->msg_animation);
     opacity_anim->setPropertyName("opacity");
-    if (!this->error_label->text().isEmpty()) opacity_anim->setTargetObject(this->error_effect);
-    if (!this->info_label->text().isEmpty()) opacity_anim->setTargetObject(this->info_effect);
+    if (!this->error_label->text().isEmpty()) {
+        label = this->error_label;
+        opacity_anim->setTargetObject(this->error_effect);
+    }
+    if (!this->info_label->text().isEmpty()) {
+        label = this->info_label;
+        opacity_anim->setTargetObject(this->info_effect);
+    }
     opacity_anim->setDuration(kAnimationDuration);
     opacity_anim->setStartValue(isShow ? 0.0 : 1.0);
     opacity_anim->setEndValue(isShow ? 1.0 : 0.0);
 
+    auto fm = label->fontMetrics();
+    auto fh = fm.height();
     auto *size_animation = new QVariantAnimation(this->msg_animation);
     size_animation->setDuration(kAnimationDuration);
-    size_animation->setStartValue(q->height());
-    size_animation->setEndValue(isShow ? kHeightWithMessage : kDefaultHeight);
+    size_animation->setStartValue(isShow ? 0 : fh);
+    size_animation->setEndValue(isShow ? fh : 0);
     QObject::connect(size_animation, &QVariantAnimation::valueChanged, q, [this, q](const QVariant &value) {
         auto const h = value.toInt();
-        this->error_label->resize(error_label->width(), h - kDefaultHeight);
-        this->info_label->resize(error_label->width(), h - kDefaultHeight);
-        q->resize(q->width(), h);
+        this->error_label->resize(q->width(), h);
+        this->info_label->resize(q->width(), h);
     });
 
     this->msg_animation->addAnimation(opacity_anim);
@@ -743,7 +748,7 @@ void QtTextInputPrivate::clearAndHideMessages() {
 
 void QtTextInputPrivate::updateCopyHintPosition() {
     Q_Q(QtTextInput);
-    auto h = kDefaultHeight;
+    auto h = this->input_container->height();
     auto y = (h - this->copy_hint->height()) / 2;
     auto x = q->width() - this->copy_hint->width();
     x -= kHorMargin;
