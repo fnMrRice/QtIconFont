@@ -409,7 +409,9 @@ void QtTextInput::mousePressEvent(QMouseEvent *event) {
 
 void QtTextInput::mouseReleaseEvent(QMouseEvent *event) {
     Q_D(QtTextInput);
-    d->copyAndSelectAll();
+    if (this->underMouse()) {
+        d->line_edit->setFocus();
+    }
     QWidget::mouseReleaseEvent(event);
 }
 
@@ -418,12 +420,15 @@ bool QtTextInput::eventFilter(QObject *watched, QEvent *event) {
     if (watched == d->line_edit) {
         switch (event->type()) {
             case QEvent::FocusIn:
+                d->playBorderAnimation();
+                d->playBackgroundAnimation();
+                if (this->isReadOnly() && d->copy_on_read_only) {
+                    d->copyAndSelectAll();
+                }
+                break;
             case QEvent::FocusOut:
                 d->playBorderAnimation();
                 d->playBackgroundAnimation();
-                return false;
-            case QEvent::MouseButtonRelease:
-                d->copyAndSelectAll();
                 return false;
             default:
                 break;
@@ -505,17 +510,14 @@ void QtTextInputPrivate::playBackgroundAnimation() {
 
 void QtTextInputPrivate::copyAndSelectAll() {
     Q_Q(QtTextInput);
-    if (this->copy_on_read_only && q->isReadOnly()) {
-        if (q->underMouse()) {
-            auto text = this->line_edit->text();
-            if (!text.isEmpty()) {
-                this->line_edit->selectAll();
-                auto *clipboard = QApplication::clipboard();
-                clipboard->setText(text);
-                emit q->textCopied(text);
-            }
-        }
-    }
+    auto text = this->line_edit->text();
+    if (text.isEmpty()) return;
+
+    // using Qt::QueuedConnection to avoid not working
+    QMetaObject::invokeMethod(q, &QtTextInput::selectAll, Qt::QueuedConnection);
+    auto *clipboard = QApplication::clipboard();
+    clipboard->setText(text);
+    emit q->textCopied(text);
 }
 
 void QtTextInputPrivate::createOrStopAnim(QVariantAnimation *&anim, const QColor &start_color) {
