@@ -43,28 +43,27 @@ configure_file(cmake/config.h.in ${PROJECT_SOURCE_DIR}/include/config.h)
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 # ------ end dependencies
 
-add_library(QtWidgets STATIC)
+add_library(QtWidgets STATIC
+            include/QtIconFont
+            include/QtImageWidget
+            include/QtTextArea
+            include/QtTextInput
+
+            include/config.h
+            include/namespace.h
+            include/qticonfont.h
+            include/qtimagewidget.h
+            include/qttextarea.h
+            include/qttextinput.h
+
+            src/qticonfont.cpp
+            src/qtimagewidget.cpp
+            src/qttextarea.cpp
+            src/qttextinput_p.h
+            src/qttextinput.cpp
+)
 target_link_libraries(QtWidgets PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets)
 target_include_directories(QtWidgets PUBLIC include)
-
-target_sources(QtWidgets INTERFACE
-               include/QtIconFont
-               include/QtImageWidget
-               include/QtTextArea
-               include/QtTextInput)
-target_sources(QtWidgets PUBLIC
-               include/config.h
-               include/namespace.h
-               include/qticonfont.h
-               include/qtimagewidget.h
-               include/qttextarea.h
-               include/qttextinput.h)
-target_sources(QtWidgets PRIVATE
-               src/qticonfont.cpp
-               src/qtimagewidget.cpp
-               src/qttextarea.cpp
-               src/qttextinput_p.h
-               src/qttextinput.cpp)
 
 if (BUILD_TEST)
     add_executable(QtIconFont_test tests/iconfont.cpp)
