@@ -11,6 +11,9 @@ FNRICE_QT_WIDGETS_USE_NAMESPACE
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QVariantAnimation>
+#include <QPropertyAnimation>
+#include <QParallelAnimationGroup>
+#include <QGraphicsOpacityEffect>
 
 static auto constexpr kMessageSpacing = 4;
 static auto constexpr kInputSpacing = 5;
@@ -39,6 +42,7 @@ class QtTextInputPrivate {
     QLineEdit *line_edit = nullptr;
     QLabel *info_label = nullptr, *error_label = nullptr;
     QAbstractButton *left_button = nullptr, *right_button = nullptr;
+    QGraphicsOpacityEffect *info_effect = nullptr, *error_effect = nullptr;
 
     // layout
     QWidget *input_container = nullptr;
@@ -72,7 +76,8 @@ class QtTextInputPrivate {
     // animations
     QVariantAnimation
         *bd_animation = nullptr,
-        *bg_animation = nullptr,
+        *bg_animation = nullptr;
+    QParallelAnimationGroup
         *msg_animation = nullptr;
 
  public:
@@ -84,7 +89,7 @@ class QtTextInputPrivate {
  public:
     void copyAndSelectAll();
     void createOrStopColorAnim(QVariantAnimation *&anim, QColor &target);
-    void createOrStopHeightAnim(QVariantAnimation *&anim, int end_value);
+    void createOrStopHeightAnim(bool isShow);
     void clearAndHideMessages();
 
  private:

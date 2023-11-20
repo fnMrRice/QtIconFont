@@ -138,7 +138,9 @@ void QtTextInput::setErrorMessage(const QString &message) {
             d->playShowMessageAnimation();
         } else {
             d->info_label->hide();
+            d->info_effect->setOpacity(0);
             d->error_label->show();
+            d->error_effect->setOpacity(1);
         }
     } else {
         // already has error message
@@ -153,7 +155,9 @@ void QtTextInput::setErrorMessage(const QString &message) {
                 // do nothing
             } else {
                 d->info_label->hide();
+                d->info_effect->setOpacity(0);
                 d->error_label->show();
+                d->error_effect->setOpacity(1);
             }
         }
     }
@@ -336,7 +340,9 @@ void QtTextInput::clearErrorMessage() {
                 d->playHideMessageAnimation();
             } else {
                 d->error_label->hide();
+                d->error_effect->setOpacity(0);
                 d->info_label->show();
+                d->info_effect->setOpacity(1);
             }
         }
     }
@@ -394,6 +400,19 @@ void QtTextInput::paintEvent(QPaintEvent *event) {
     Q_D(QtTextInput);
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
+
+    auto ev_width = event->rect().width();
+    if (ev_width != this->width()) {
+        // beam blink, update background only
+        // or line_edit hover/focus
+        painter.save();
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(d->p_bg);
+        painter.drawRect(event->rect());
+        painter.restore();
+        return;
+    }
+//    qDebug("event->rect() = (%d, %d, %dx%d)", event->rect().left(), event->rect().top(), event->rect().width(), event->rect().height());
 
     painter.save();
     auto pen = painter.pen();
@@ -455,9 +474,17 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->info_label->setStyleSheet(kInfoMessageStyle);
     this->info_label->hide();
 
+    this->info_effect = new QGraphicsOpacityEffect(this->info_label);
+    this->info_effect->setOpacity(0);
+    this->info_label->setGraphicsEffect(this->info_effect);
+
     this->error_label = new QLabel;
     this->error_label->setStyleSheet(kErrorMessageStyle);
     this->error_label->hide();
+
+    this->error_effect = new QGraphicsOpacityEffect(this->error_label);
+    this->error_effect->setOpacity(0);
+    this->error_label->setGraphicsEffect(this->error_effect);
 
     this->main_layout = new QVBoxLayout;
     this->main_layout->setContentsMargins(0, 0, 0, 0);
@@ -493,13 +520,13 @@ void QtTextInputPrivate::playShowMessageAnimation() {
     Q_Q(QtTextInput);
     if (!this->info_label->text().isEmpty()) this->info_label->show();
     if (!this->error_label->text().isEmpty()) this->error_label->show();
-    this->createOrStopHeightAnim(this->msg_animation, kHeightWithMessage);
+    this->createOrStopHeightAnim(true);
     this->msg_animation->start();
 }
 
 void QtTextInputPrivate::playHideMessageAnimation() {
     Q_Q(QtTextInput);
-    this->createOrStopHeightAnim(this->msg_animation, kDefaultHeight);
+    this->createOrStopHeightAnim(false);
     this->msg_animation->start();
 }
 
@@ -553,21 +580,38 @@ void QtTextInputPrivate::createOrStopColorAnim(QVariantAnimation *&anim, QColor 
     }
 }
 
-void QtTextInputPrivate::createOrStopHeightAnim(QVariantAnimation *&anim, int end_value) {
+void QtTextInputPrivate::createOrStopHeightAnim(bool isShow) {
     Q_Q(QtTextInput);
-    if (anim) {
-        anim->stop();
-        anim->deleteLater();
+    if (this->msg_animation) {
+        this->msg_animation->stop();
+        this->msg_animation->deleteLater();
     }
-    anim = new QVariantAnimation(q);
-    anim->setDuration(kAnimationDuration);
-    anim->setStartValue(q->height());
-    anim->setEndValue(end_value);
-    QObject::connect(anim, &QVariantAnimation::valueChanged, q, [q](const QVariant &value) {
-        q->resize(q->width(), value.toInt());
+    this->msg_animation = new QParallelAnimationGroup(q);
+
+    auto *opacity_anim = new QPropertyAnimation(this->msg_animation);
+    opacity_anim->setPropertyName("opacity");
+    if (!this->error_label->text().isEmpty()) opacity_anim->setTargetObject(this->error_effect);
+    if (!this->info_label->text().isEmpty()) opacity_anim->setTargetObject(this->info_effect);
+    opacity_anim->setDuration(kAnimationDuration);
+    opacity_anim->setStartValue(isShow ? 0.0 : 1.0);
+    opacity_anim->setEndValue(isShow ? 1.0 : 0.0);
+
+    auto *size_animation = new QVariantAnimation(this->msg_animation);
+    size_animation->setDuration(kAnimationDuration);
+    size_animation->setStartValue(q->height());
+    size_animation->setEndValue(isShow ? kHeightWithMessage : kDefaultHeight);
+    QObject::connect(size_animation, &QVariantAnimation::valueChanged, q, [this, q](const QVariant &value) {
+        auto const h = value.toInt();
+        this->error_label->resize(error_label->width(), h - kDefaultHeight);
+        this->info_label->resize(error_label->width(), h - kDefaultHeight);
+        q->resize(q->width(), h);
     });
-    if (end_value == kDefaultHeight) {
-        QObject::connect(anim, &QAbstractAnimation::finished, q, [this] {
+
+    this->msg_animation->addAnimation(opacity_anim);
+    this->msg_animation->addAnimation(size_animation);
+
+    if (!isShow) {
+        QObject::connect(this->msg_animation, &QAbstractAnimation::finished, q, [this] {
             this->clearAndHideMessages();
         });
     }
