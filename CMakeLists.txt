@@ -49,19 +49,30 @@ target_include_directories(QtWidgets PUBLIC include)
 
 target_sources(QtWidgets INTERFACE
                include/QtIconFont
-               include/QtImageWidget)
+               include/QtImageWidget
+               include/QtTextArea
+               include/QtTextInput)
 target_sources(QtWidgets PUBLIC
+               include/config.h
+               include/namespace.h
                include/qticonfont.h
-               include/qtimagewidget.h)
+               include/qtimagewidget.h
+               include/qttextarea.h
+               include/qttextinput.h)
 target_sources(QtWidgets PRIVATE
                src/qticonfont.cpp
-               src/qtimagewidget.cpp)
+               src/qtimagewidget.cpp
+               src/qttextarea.cpp
+               src/qttextinput_p.h
+               src/qttextinput.cpp)
 
 if (BUILD_TEST)
-    add_executable(QtIconFont_test tests/iconfont.cpp
-                   include/namespace.h)
+    add_executable(QtIconFont_test tests/iconfont.cpp)
     target_link_libraries(QtIconFont_test PRIVATE QtWidgets)
 
     add_executable(QtImageWidget_test tests/imagewidget.cpp)
     target_link_libraries(QtImageWidget_test PRIVATE QtWidgets)
+
+    add_executable(QtTextInput_test tests/text_input.cpp)
+    target_link_libraries(QtTextInput_test PRIVATE QtWidgets)
 endif ()
