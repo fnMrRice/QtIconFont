@@ -5,6 +5,15 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QMouseEvent>
+#include <QLineEdit>
+
+static auto constexpr kMessageSpacing = 4;
+static auto constexpr kInputSpacing = 5;
+#define NO_BORDER_INPUT_MARGINS 0,6,0,6
+#define WITH_BORDER_INPUT_MARGINS 10,6,10,6
+static auto constexpr kLineEditStyle = "background: transparent; border: hidden;";
+static auto constexpr kInfoMessageStyle = "color: #666666; font-size: 12px;";
+static auto constexpr kErrorMessageStyle = "color: #F24951; font-size: 12px;";
 
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
@@ -35,7 +44,13 @@ void QtTextInput::setBorderWidth(int width) {
 
 void QtTextInput::setBorderStyle(Qt::PenStyle style) {
     Q_D(QtTextInput);
+    if (d->border_style == style) return;
     d->border_style = style;
+    if (style == Qt::NoPen) {
+        d->input_layout->setContentsMargins(NO_BORDER_INPUT_MARGINS);
+    } else {
+        d->input_layout->setContentsMargins(WITH_BORDER_INPUT_MARGINS);
+    }
     this->update();
 }
 
@@ -415,25 +430,25 @@ bool QtTextInput::eventFilter(QObject *watched, QEvent *event) {
 
 QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->line_edit = new QLineEdit;
-    this->line_edit->setStyleSheet("background: transparent; border: hidden;");
+    this->line_edit->setStyleSheet(kLineEditStyle);
 
     this->info_label = new QLabel;
-    this->info_label->setStyleSheet("color: #666666; font-size: 12px;");
-    this->info_label->setText("Here is extra message");
+    this->info_label->setStyleSheet(kInfoMessageStyle);
+    this->info_label->setText(QObject::tr("Here is extra message"));
     this->info_label->hide();
 
     this->error_label = new QLabel;
-    this->error_label->setStyleSheet("color: #F24951; font-size: 12px;");
-    this->error_label->setText("Here is error message");
+    this->error_label->setStyleSheet(kErrorMessageStyle);
+    this->error_label->setText(QObject::tr("Here is error message"));
     this->error_label->hide();
 
     this->main_layout = new QVBoxLayout;
     this->main_layout->setContentsMargins(0, 0, 0, 0);
-    this->main_layout->setSpacing(4);
+    this->main_layout->setSpacing(kMessageSpacing);
 
     this->input_layout = new QHBoxLayout;
-    this->input_layout->setContentsMargins(10, 6, 10, 6);
-    this->input_layout->setSpacing(5);
+    this->input_layout->setContentsMargins(WITH_BORDER_INPUT_MARGINS);
+    this->input_layout->setSpacing(kInputSpacing);
 
     this->input_layout->addWidget(this->line_edit);
 
