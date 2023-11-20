@@ -284,6 +284,11 @@ void QtTextInput::setCopyOnReadOnly(bool enable) {
 
 void QtTextInput::setCopyHint(const QString &hint) {
     Q_D(QtTextInput);
+    if (hint.isEmpty()) {
+        d->copy_hint->hide();
+    } else {
+        d->copy_hint->show();
+    }
     d->copy_hint->setText(hint);
     d->copy_hint->adjustSize();
     d->updateCopyHintPosition();
