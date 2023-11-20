@@ -3,6 +3,8 @@
 #include <QLabel>
 #include <QTimer>
 #include <QToolButton>
+#include <QPushButton>
+#include <QHBoxLayout>
 
 FNRICE_QT_WIDGETS_USE_NAMESPACE
 
@@ -60,7 +62,7 @@ int main(int argc, char *argv[]) {
 
     auto *text_input2 = new QtTextInput(w);
     text_input->setObjectName("text_input2");
-    text_input2->move(20, 60);
+    text_input2->move(20, 80);
     text_input2->setRightButton(r_btn);
     text_input2->setEchoMode(QLineEdit::Password);
     QObject::connect(r_btn, &QAbstractButton::toggled, text_input2, [&](bool checked) {
@@ -73,9 +75,37 @@ int main(int argc, char *argv[]) {
 
     auto *text_input3 = new QtTextInput(w);
     text_input->setObjectName("text_input3");
-    text_input3->move(20, 100);
+    text_input3->move(20, 140);
     text_input3->setReadOnly(true);
     text_input3->setText("123456");
+
+    auto *buttons = new QWidget(w);
+    auto *layout = new QHBoxLayout(buttons);
+    auto *btn_error = new QPushButton("Set error");
+    auto *btn_msg = new QPushButton("Set message");
+    auto *btn_clear_err = new QPushButton("Clear error");
+    auto *btn_clear_msg = new QPushButton("Clear message");
+    QObject::connect(btn_error, &QAbstractButton::clicked, text_input, [text_input] {
+        text_input->setErrorMessage("This is an error message.");
+        text_input->setFocus();
+    });
+    QObject::connect(btn_msg, &QAbstractButton::clicked, text_input, [text_input] {
+        text_input->setExtraMessage("This is a normal message.");
+        text_input->setFocus();
+    });
+    QObject::connect(btn_clear_err, &QAbstractButton::clicked, text_input, [text_input] {
+        text_input->clearErrorMessage();
+        text_input->setFocus();
+    });
+    QObject::connect(btn_clear_msg, &QAbstractButton::clicked, text_input, [text_input] {
+        text_input->clearExtraMessage();
+        text_input->setFocus();
+    });
+    layout->addWidget(btn_error);
+    layout->addWidget(btn_msg);
+    layout->addWidget(btn_clear_err);
+    layout->addWidget(btn_clear_msg);
+    buttons->move(20, 220);
 
     w->show();
 

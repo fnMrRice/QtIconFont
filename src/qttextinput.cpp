@@ -137,8 +137,8 @@ void QtTextInput::setErrorMessage(const QString &message) {
         if (d->info_message.isEmpty()) {
             d->playShowMessageAnimation();
         } else {
-            d->error_label->hide();
-            d->info_label->show();
+            d->info_label->hide();
+            d->error_label->show();
         }
     } else {
         // already has error message
@@ -147,6 +147,13 @@ void QtTextInput::setErrorMessage(const QString &message) {
                 // do nothing
             } else {
                 d->playShowMessageAnimation();
+            }
+        } else {
+            if (message.isEmpty()) {
+                // do nothing
+            } else {
+                d->info_label->hide();
+                d->error_label->show();
             }
         }
     }
@@ -297,8 +304,6 @@ void QtTextInput::clearExtraMessage() {
     if (d->has_error) {
         // error has higher priority
         if (d->error_message.isEmpty()) {
-            // do nothing
-        } else {
             if (d->info_message.isEmpty()) {
                 // do nothing
             } else {
@@ -352,7 +357,7 @@ QSize QtTextInput::minimumSizeHint() const {
     if ((d->has_error && !d->error_message.isEmpty()) || !d->info_message.isEmpty()) {
         has_text = true;
     }
-    return {min_width, has_text ? 32 : 54};
+    return {min_width, has_text ? kDefaultHeight : kHeightWithMessage};
 }
 
 void QtTextInput::showEvent(QShowEvent *event) {
@@ -401,8 +406,8 @@ void QtTextInput::paintEvent(QPaintEvent *event) {
 
     // draw rounded rect
     auto rect = this->rect();
-    rect.setHeight(32);
-    painter.drawRoundedRect(this->rect(), this->borderRadius(), this->borderRadius());
+    rect.setHeight(kDefaultHeight);
+    painter.drawRoundedRect(rect, this->borderRadius(), this->borderRadius());
 
     painter.restore();
 }
@@ -448,12 +453,10 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
 
     this->info_label = new QLabel;
     this->info_label->setStyleSheet(kInfoMessageStyle);
-    this->info_label->setText(QObject::tr("Here is extra message"));
     this->info_label->hide();
 
     this->error_label = new QLabel;
     this->error_label->setStyleSheet(kErrorMessageStyle);
-    this->error_label->setText(QObject::tr("Here is error message"));
     this->error_label->hide();
 
     this->main_layout = new QVBoxLayout;
@@ -470,6 +473,10 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->main_layout->addWidget(this->info_label);
     this->main_layout->addWidget(this->error_label);
 
+    this->main_layout->setStretch(0, kDefaultHeight);
+    this->main_layout->setStretch(1, kHeightWithMessage - kDefaultHeight);
+    this->main_layout->setStretch(2, kHeightWithMessage - kDefaultHeight);
+
     this->line_edit->installEventFilter(q);
 }
 
@@ -480,15 +487,22 @@ QtTextInputPrivate::~QtTextInputPrivate() {
 }
 
 void QtTextInputPrivate::playShowMessageAnimation() {
-    this->info_label->show();
-    this->error_label->show();
-    // TODO: add animation
+    Q_Q(QtTextInput);
+    if (!this->info_label->text().isEmpty()) this->info_label->show();
+    if (!this->error_label->text().isEmpty()) this->error_label->show();
+    q->resize(q->width(), kHeightWithMessage);
+    // TODO: replace resize() with animation
 }
 
 void QtTextInputPrivate::playHideMessageAnimation() {
+    Q_Q(QtTextInput);
     this->info_label->hide();
     this->error_label->hide();
-    // TODO: add animation
+    q->resize(q->width(), kDefaultHeight);
+    // TODO: replace resize() with animation
+    // TODO: hide labels after animation stopped
+    this->info_label->clear();
+    this->error_label->clear();
 }
 
 void QtTextInputPrivate::playBorderAnimation() {

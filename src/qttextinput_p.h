@@ -24,6 +24,8 @@ static auto constexpr kDisabledBorderColor = "#F2F2F2";
 static auto constexpr kFocusBorderColor = "#3C6CFE";
 static auto constexpr kNormalBorderColor = "#E4E4E4";
 static auto constexpr kErrorBorderColor = "#F24951";
+static auto constexpr kDefaultHeight = 32;
+static auto constexpr kHeightWithMessage = 54;
 
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
