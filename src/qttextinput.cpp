@@ -49,20 +49,38 @@ void QtTextInput::setBorderRadius(int radius) {
     d->border_radius = radius;
 }
 
-void QtTextInput::setBorderColor(QtTextInput::BorderType type, const QColor &color) {
+void QtTextInput::setBorderColor(QtTextInput::InputState state, const QColor &color) {
     Q_D(QtTextInput);
-    switch (type) {
-        case QtTextInput::BorderNormal:
+    switch (state) {
+        case QtTextInput::StateNormal:
             d->border_color.normal = color;
             break;
-        case QtTextInput::BorderDisabled:
+        case QtTextInput::StateDisabled:
             d->border_color.disabled = color;
             break;
-        case QtTextInput::BorderFocus:
+        case QtTextInput::StateFocus:
             d->border_color.focus = color;
             break;
-        case QtTextInput::BorderError:
+        case QtTextInput::StateError:
             d->border_color.error = color;
+            break;
+    }
+}
+
+void QtTextInput::setBackgroundColor(QtTextInput::InputState state, const QColor &color) {
+    Q_D(QtTextInput);
+    switch (state) {
+        case QtTextInput::StateNormal:
+            d->bg_color.normal = color;
+            break;
+        case QtTextInput::StateDisabled:
+            d->bg_color.disabled = color;
+            break;
+        case QtTextInput::StateFocus:
+            d->bg_color.focus = color;
+            break;
+        case QtTextInput::StateError:
+            d->bg_color.error = color;
             break;
     }
 }
@@ -82,17 +100,33 @@ int QtTextInput::borderRadius() const {
     return d->border_radius;
 }
 
-QColor QtTextInput::borderColor(QtTextInput::BorderType type) const {
+QColor QtTextInput::borderColor(QtTextInput::InputState state) const {
     Q_D(const QtTextInput);
-    switch (type) {
-        case BorderNormal:
+    switch (state) {
+        case StateNormal:
             return d->border_color.normal;
-        case BorderDisabled:
+        case StateDisabled:
             return d->border_color.disabled;
-        case BorderError:
+        case StateError:
             return d->border_color.error;
-        case BorderFocus:
+        case StateFocus:
             return d->border_color.focus;
+        default:
+            return {};
+    }
+}
+
+QColor QtTextInput::backgroundColor(QtTextInput::InputState state) const {
+    Q_D(const QtTextInput);
+    switch (state) {
+        case StateNormal:
+            return d->bg_color.normal;
+        case StateDisabled:
+            return d->bg_color.disabled;
+        case StateError:
+            return d->bg_color.error;
+        case StateFocus:
+            return d->bg_color.focus;
         default:
             return {};
     }
@@ -383,11 +417,6 @@ QSize QtTextInput::minimumSizeHint() const {
 
 void QtTextInput::showEvent(QShowEvent *event) {
     Q_D(QtTextInput);
-    if (d->first_show) {
-        d->first_show = false;
-        // set present colors
-        d->p_bg = this->palette().color(this->backgroundRole());
-    }
     QWidget::showEvent(event);
 }
 
@@ -395,8 +424,6 @@ void QtTextInput::changeEvent(QEvent *event) {
     Q_D(QtTextInput);
     switch (event->type()) {
         case QEvent::EnabledChange:
-        case QEvent::PaletteChange:
-        case QEvent::StyleChange:
             d->playBorderAnimation();
             d->playBackgroundAnimation();
         default:
@@ -523,6 +550,18 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->main_layout->setStretch(2, kHeightWithMessage - kDefaultHeight);
 
     this->line_edit->installEventFilter(q);
+
+    border_color.normal = kNormalBorderColor;
+    border_color.error = kErrorBorderColor;
+    border_color.focus = kFocusBorderColor;
+    border_color.disabled = kDisabledBorderColor;
+    p_border = border_color.normal;
+
+    bg_color.normal = kNormalBgColor;
+    bg_color.error = kErrorBgColor;
+    bg_color.focus = kFocusBgColor;
+    bg_color.disabled = kDisabledBgColor;
+    p_bg = bg_color.normal;
 }
 
 QtTextInputPrivate::~QtTextInputPrivate() {
@@ -563,7 +602,15 @@ void QtTextInputPrivate::playBorderAnimation() {
 void QtTextInputPrivate::playBackgroundAnimation() {
     Q_Q(QtTextInput);
     this->createOrStopColorAnim(this->bg_animation, this->p_bg);
-    this->bg_animation->setEndValue(q->palette().color(q->backgroundRole()));
+    if (!q->isEnabled()) {
+        this->bg_animation->setEndValue(this->bg_color.disabled);
+    } else if (this->has_error) {
+        this->bg_animation->setEndValue(this->bg_color.error);
+    } else if (q->hasFocus() || this->line_edit->hasFocus()) {
+        this->bg_animation->setEndValue(this->bg_color.focus);
+    } else {
+        this->bg_animation->setEndValue(this->bg_color.normal);
+    }
     this->bg_animation->start();
 }
 

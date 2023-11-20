@@ -18,15 +18,15 @@ class QtTextInput : public QWidget {
     ~QtTextInput() override;
 
  public: // enums
-    enum BorderType {
-        BorderNormal = 0,
-        BorderDisabled,
-        BorderFocus,
-        BorderError,
+    enum InputState {
+        StateNormal = 0,
+        StateDisabled,
+        StateFocus,
+        StateError,
     };
-    Q_ENUM(BorderType)
+    Q_ENUM(InputState)
 
- public: // border style setters
+ public: // style properties
     Q_PROPERTY(int borderWidth READ borderWidth WRITE setBorderWidth)
     Q_PROPERTY(Qt::PenStyle borderStyle READ borderStyle WRITE setBorderStyle)
     Q_PROPERTY(int borderRadius READ borderRadius WRITE setBorderRadius)
@@ -34,14 +34,16 @@ class QtTextInput : public QWidget {
     void setBorderWidth(int width);
     void setBorderStyle(Qt::PenStyle style);
     void setBorderRadius(int radius);
-    void setBorderColor(QtTextInput::BorderType type, const QColor &color);
+    void setBorderColor(QtTextInput::InputState state, const QColor &color);
+    void setBackgroundColor(QtTextInput::InputState state, const QColor &color);
 
     [[nodiscard]] int borderWidth() const;
     [[nodiscard]] Qt::PenStyle borderStyle() const;
     [[nodiscard]] int borderRadius() const;
-    [[nodiscard]] QColor borderColor(QtTextInput::BorderType type) const;
+    [[nodiscard]] QColor borderColor(QtTextInput::InputState type) const;
+    [[nodiscard]] QColor backgroundColor(QtTextInput::InputState type) const;
 
- public: // normal attributes
+ public: // normal properties
     Q_PROPERTY(QString text READ text WRITE setText)
     Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText)
     Q_PROPERTY(int maxLength READ maxLength WRITE setMaxLength)

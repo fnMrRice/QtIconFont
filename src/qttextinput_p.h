@@ -27,6 +27,10 @@ static auto constexpr kDisabledBorderColor = "#F2F2F2";
 static auto constexpr kFocusBorderColor = "#3C6CFE";
 static auto constexpr kNormalBorderColor = "#E4E4E4";
 static auto constexpr kErrorBorderColor = "#F24951";
+static auto constexpr kDisabledBgColor = "#F2F2F2";
+static auto constexpr kFocusBgColor = "#FFFFFF";
+static auto constexpr kNormalBgColor = "#FFFFFF";
+static auto constexpr kErrorBgColor = "#FFFFFF";
 static auto constexpr kDefaultHeight = 32;
 static auto constexpr kHeightWithMessage = 54;
 
@@ -52,17 +56,15 @@ class QtTextInputPrivate {
     // border
     int border_width = 1;
     Qt::PenStyle border_style = Qt::SolidLine;
-    struct BorderColor_t {
-        QColor normal = QColor(kNormalBorderColor);
-        QColor focus = QColor(kFocusBorderColor);
-        QColor disabled = QColor(kDisabledBorderColor);
-        QColor error = QColor(kErrorBorderColor);
-    } border_color;
+    struct Colors_t {
+        QColor normal, focus, disabled, error;
+    };
+    Colors_t border_color, bg_color;
     int border_radius = 4;
 
     // present
     bool first_show = true;
-    QColor p_border = border_color.normal, p_bg, p_text;
+    QColor p_border, p_bg, p_text;
     int p_msg_h = 0;
 
     // message
