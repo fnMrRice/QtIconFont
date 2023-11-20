@@ -2,7 +2,9 @@
 #include "qttextinput_p.h"
 #include <QEvent>
 #include <QPainter>
-#include <QDebug>
+#include <QClipboard>
+#include <QApplication>
+#include <QMouseEvent>
 
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
@@ -158,6 +160,43 @@ void QtTextInput::setRightButton(QAbstractButton *button) {
     connect(d->right_button, &QAbstractButton::clicked, this, &QtTextInput::rightButtonClicked);
 }
 
+void QtTextInput::setEchoMode(QLineEdit::EchoMode mode) {
+    Q_D(QtTextInput);
+    d->line_edit->setEchoMode(mode);
+}
+
+void QtTextInput::setReadOnly(bool readOnly) {
+    Q_D(QtTextInput);
+    if (this->isReadOnly() == readOnly) return;
+    d->line_edit->setReadOnly(readOnly);
+    if (d->copy_on_read_only) {
+        if (readOnly) {
+            d->old_cursor = this->cursor();
+            this->setCursor(Qt::PointingHandCursor);
+            d->line_edit->setCursor(Qt::PointingHandCursor);
+        } else {
+            this->setCursor(d->old_cursor);
+            d->line_edit->setCursor(Qt::IBeamCursor);
+        }
+    }
+}
+
+void QtTextInput::setCopyOnReadOnly(bool enable) {
+    Q_D(QtTextInput);
+    if (d->copy_on_read_only == enable) return;
+    d->copy_on_read_only = enable;
+    if (this->isReadOnly()) {
+        if (enable) {
+            d->old_cursor = this->cursor();
+            this->setCursor(Qt::PointingHandCursor);
+            d->line_edit->setCursor(Qt::PointingHandCursor);
+        } else {
+            this->setCursor(d->old_cursor);
+            d->line_edit->setCursor(Qt::IBeamCursor);
+        }
+    }
+}
+
 QString QtTextInput::text() const {
     Q_D(const QtTextInput);
     return d->line_edit->text();
@@ -207,6 +246,21 @@ QAbstractButton *QtTextInput::leftButton() const {
 QAbstractButton *QtTextInput::rightButton() const {
     Q_D(const QtTextInput);
     return d->right_button;
+}
+
+QLineEdit::EchoMode QtTextInput::echoMode() const {
+    Q_D(const QtTextInput);
+    return d->line_edit->echoMode();
+}
+
+bool QtTextInput::isReadOnly() const {
+    Q_D(const QtTextInput);
+    return d->line_edit->isReadOnly();
+}
+
+bool QtTextInput::isCopyOnReadOnly() const {
+    Q_D(const QtTextInput);
+    return d->copy_on_read_only;
 }
 
 void QtTextInput::selectAll() {
@@ -283,22 +337,6 @@ void QtTextInput::showEvent(QShowEvent *event) {
         d->first_show = false;
         // set present colors
         d->p_bg = this->palette().color(this->backgroundRole());
-
-        auto palette = this->palette();
-        qDebug() << "QPalette::Window" << palette.color(QPalette::ColorRole::WindowText);
-        qDebug() << "QPalette::Button" << palette.color(QPalette::ColorRole::Button);
-        qDebug() << "QPalette::Light" << palette.color(QPalette::ColorRole::Light);
-        qDebug() << "QPalette::Midlight" << palette.color(QPalette::ColorRole::Midlight);
-        qDebug() << "QPalette::Dark" << palette.color(QPalette::ColorRole::Dark);
-        qDebug() << "QPalette::Mid" << palette.color(QPalette::ColorRole::Mid);
-        qDebug() << "QPalette::Shadow" << palette.color(QPalette::ColorRole::Shadow);
-        qDebug() << "QPalette::Highlight" << palette.color(QPalette::ColorRole::Highlight);
-        qDebug() << "QPalette::HighlightedText" << palette.color(QPalette::ColorRole::HighlightedText);
-        qDebug() << "QPalette::Link" << palette.color(QPalette::ColorRole::Link);
-        qDebug() << "QPalette::LinkVisited" << palette.color(QPalette::ColorRole::LinkVisited);
-        qDebug() << "QPalette::ToolTipBase" << palette.color(QPalette::ColorRole::ToolTipBase);
-        qDebug() << "QPalette::ToolTipText" << palette.color(QPalette::ColorRole::ToolTipText);
-        qDebug() << "QPalette::PlaceholderText" << palette.color(QPalette::ColorRole::PlaceholderText);
     }
     QWidget::showEvent(event);
 }
@@ -320,6 +358,7 @@ void QtTextInput::changeEvent(QEvent *event) {
 void QtTextInput::focusInEvent(QFocusEvent *event) {
     Q_D(QtTextInput);
     d->line_edit->setFocus();
+    QWidget::focusInEvent(event);
 }
 
 void QtTextInput::paintEvent(QPaintEvent *event) {
@@ -344,12 +383,31 @@ void QtTextInput::paintEvent(QPaintEvent *event) {
     painter.restore();
 }
 
+void QtTextInput::mousePressEvent(QMouseEvent *event) {
+    Q_D(QtTextInput);
+    QWidget::mousePressEvent(event);
+}
+
+void QtTextInput::mouseReleaseEvent(QMouseEvent *event) {
+    Q_D(QtTextInput);
+    d->copyAndSelectAll();
+    QWidget::mouseReleaseEvent(event);
+}
+
 bool QtTextInput::eventFilter(QObject *watched, QEvent *event) {
     Q_D(QtTextInput);
     if (watched == d->line_edit) {
-        if (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut) {
-            d->playBorderAnimation();
-            d->playBackgroundAnimation();
+        switch (event->type()) {
+            case QEvent::FocusIn:
+            case QEvent::FocusOut:
+                d->playBorderAnimation();
+                d->playBackgroundAnimation();
+                return false;
+            case QEvent::MouseButtonRelease:
+                d->copyAndSelectAll();
+                return false;
+            default:
+                break;
         }
     }
     return false;
@@ -382,6 +440,8 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->main_layout->addLayout(this->input_layout);
     this->main_layout->addWidget(this->info_label);
     this->main_layout->addWidget(this->error_label);
+
+    this->line_edit->installEventFilter(q);
 }
 
 QtTextInputPrivate::~QtTextInputPrivate() {
@@ -423,6 +483,21 @@ void QtTextInputPrivate::playBackgroundAnimation() {
     this->p_bg = q->palette().color(q->backgroundRole());
     q->update();
     // TODO: add animation
+}
+
+void QtTextInputPrivate::copyAndSelectAll() {
+    Q_Q(QtTextInput);
+    if (this->copy_on_read_only && q->isReadOnly()) {
+        if (q->underMouse()) {
+            auto text = this->line_edit->text();
+            if (!text.isEmpty()) {
+                this->line_edit->selectAll();
+                auto *clipboard = QApplication::clipboard();
+                clipboard->setText(text);
+                emit q->textCopied(text);
+            }
+        }
+    }
 }
 
 FNRICE_QT_WIDGETS_END_NAMESPACE

@@ -2,6 +2,7 @@
 #define QTWIDGETS_SRC_QTTEXTINPUT_H_
 
 #include <QWidget>
+#include <QLineEdit>
 #include "namespace.h"
 
 QT_FORWARD_DECLARE_CLASS(QValidator);
@@ -29,7 +30,7 @@ class QtTextInput : public QWidget {
     [[nodiscard]] Qt::PenStyle borderStyle() const;
     [[nodiscard]] int borderRadius() const;
 
- public:
+ public: // normal attributes
     Q_PROPERTY(QString text READ text WRITE setText)
     Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText)
     Q_PROPERTY(int maxLength READ maxLength WRITE setMaxLength)
@@ -40,6 +41,9 @@ class QtTextInput : public QWidget {
     Q_PROPERTY(const QValidator *validator READ validator WRITE setValidator)
     Q_PROPERTY(QAbstractButton * leftButton READ leftButton WRITE setLeftButton)
     Q_PROPERTY(QAbstractButton * rightButton READ rightButton WRITE setRightButton)
+    Q_PROPERTY(QLineEdit::EchoMode echoMode READ echoMode WRITE setEchoMode)
+    Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly)
+    Q_PROPERTY(bool copyOnReadOnly READ isCopyOnReadOnly WRITE setCopyOnReadOnly)
 
     void setText(const QString &text);
     void setPlaceholderText(const QString &text);
@@ -50,6 +54,9 @@ class QtTextInput : public QWidget {
     void setValidator(const QValidator *validator);
     void setLeftButton(QAbstractButton *button);
     void setRightButton(QAbstractButton *button);
+    void setEchoMode(QLineEdit::EchoMode mode);
+    void setReadOnly(bool readOnly);
+    void setCopyOnReadOnly(bool enable);
 
     [[nodiscard]] QString text() const;
     [[nodiscard]] QString placeholderText() const;
@@ -61,6 +68,9 @@ class QtTextInput : public QWidget {
     [[nodiscard]] const QValidator *validator() const;
     [[nodiscard]] QAbstractButton *leftButton() const;
     [[nodiscard]] QAbstractButton *rightButton() const;
+    [[nodiscard]] QLineEdit::EchoMode echoMode() const;
+    [[nodiscard]] bool isReadOnly() const;
+    [[nodiscard]] bool isCopyOnReadOnly() const;
 
  public:
     Q_INVOKABLE void selectAll();
@@ -76,6 +86,8 @@ class QtTextInput : public QWidget {
     void changeEvent(QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     bool eventFilter(QObject *watched, QEvent *event) override;
 
  Q_SIGNALS:
@@ -84,6 +96,7 @@ class QtTextInput : public QWidget {
     void returnPressed();
     void leftButtonClicked(bool checked);
     void rightButtonClicked(bool checked);
+    void textCopied(const QString &text);
 
  private:
     Q_DECLARE_PRIVATE(QtTextInput);

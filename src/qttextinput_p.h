@@ -36,12 +36,16 @@ class QtTextInputPrivate {
 
     // present
     bool first_show = true;
-    QColor p_border, p_bg, p_text;
+    QColor p_border = border_color, p_bg, p_text;
     int p_msg_h = 0;
 
     // message
     QString info_message, error_message;
     bool has_error = false;
+
+    // copy on readonly
+    bool copy_on_read_only = true;
+    QCursor old_cursor;
 
  public:
     void playShowMessageAnimation();
@@ -49,19 +53,12 @@ class QtTextInputPrivate {
     void playBorderAnimation();
     void playBackgroundAnimation();
 
+ public:
+    void copyAndSelectAll();
+
  private:
     Q_DECLARE_PUBLIC(QtTextInput);
     QtTextInput *q_ptr;
-};
-
-class QtTextInputPresentObject : public QObject {
- public:
-    QtTextInputPresentObject() = default;
-    ~QtTextInputPresentObject() override = default;
-
- public:
-    QColor border_color;
-    QColor background_color;
 };
 
 FNRICE_QT_WIDGETS_END_NAMESPACE
