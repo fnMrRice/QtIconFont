@@ -463,13 +463,16 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->main_layout->setContentsMargins(0, 0, 0, 0);
     this->main_layout->setSpacing(kMessageSpacing);
 
-    this->input_layout = new QHBoxLayout;
+    this->input_container = new QWidget;
+    this->input_container->setFixedHeight(kDefaultHeight);
+
+    this->input_layout = new QHBoxLayout(this->input_container);
     this->input_layout->setContentsMargins(WITH_BORDER_INPUT_MARGINS);
     this->input_layout->setSpacing(kInputSpacing);
 
     this->input_layout->addWidget(this->line_edit);
 
-    this->main_layout->addLayout(this->input_layout);
+    this->main_layout->addWidget(this->input_container);
     this->main_layout->addWidget(this->info_label);
     this->main_layout->addWidget(this->error_label);
 
@@ -490,24 +493,19 @@ void QtTextInputPrivate::playShowMessageAnimation() {
     Q_Q(QtTextInput);
     if (!this->info_label->text().isEmpty()) this->info_label->show();
     if (!this->error_label->text().isEmpty()) this->error_label->show();
-    q->resize(q->width(), kHeightWithMessage);
-    // TODO: replace resize() with animation
+    this->createOrStopHeightAnim(this->msg_animation, kHeightWithMessage);
+    this->msg_animation->start();
 }
 
 void QtTextInputPrivate::playHideMessageAnimation() {
     Q_Q(QtTextInput);
-    this->info_label->hide();
-    this->error_label->hide();
-    q->resize(q->width(), kDefaultHeight);
-    // TODO: replace resize() with animation
-    // TODO: hide labels after animation stopped
-    this->info_label->clear();
-    this->error_label->clear();
+    this->createOrStopHeightAnim(this->msg_animation, kDefaultHeight);
+    this->msg_animation->start();
 }
 
 void QtTextInputPrivate::playBorderAnimation() {
     Q_Q(QtTextInput);
-    this->createOrStopAnim(this->bd_animation, this->p_border);
+    this->createOrStopColorAnim(this->bd_animation, this->p_border);
     if (!q->isEnabled()) {
         this->bd_animation->setEndValue(this->border_color.disabled);
     } else if (this->has_error) {
@@ -522,7 +520,7 @@ void QtTextInputPrivate::playBorderAnimation() {
 
 void QtTextInputPrivate::playBackgroundAnimation() {
     Q_Q(QtTextInput);
-    this->createOrStopAnim(this->bg_animation, this->p_bg);
+    this->createOrStopColorAnim(this->bg_animation, this->p_bg);
     this->bg_animation->setEndValue(q->palette().color(q->backgroundRole()));
     this->bg_animation->start();
 }
@@ -539,20 +537,48 @@ void QtTextInputPrivate::copyAndSelectAll() {
     emit q->textCopied(text);
 }
 
-void QtTextInputPrivate::createOrStopAnim(QVariantAnimation *&anim, const QColor &start_color) {
+void QtTextInputPrivate::createOrStopColorAnim(QVariantAnimation *&anim, QColor &target) {
     Q_Q(QtTextInput);
     if (anim) {
         anim->stop();
-        anim->setStartValue(start_color);
+        anim->setStartValue(target);
     } else {
         anim = new QVariantAnimation(q);
         anim->setDuration(kAnimationDuration);
-        anim->setStartValue(start_color);
-        QObject::connect(anim, &QVariantAnimation::valueChanged, q, [this, q](const QVariant &color) {
-            this->p_border = color.value<QColor>();
+        anim->setStartValue(target);
+        QObject::connect(anim, &QVariantAnimation::valueChanged, q, [q, &target](const QVariant &value) {
+            target = value.value<QColor>();
             q->update();
         });
     }
+}
+
+void QtTextInputPrivate::createOrStopHeightAnim(QVariantAnimation *&anim, int end_value) {
+    Q_Q(QtTextInput);
+    if (anim) {
+        anim->stop();
+        anim->deleteLater();
+    }
+    anim = new QVariantAnimation(q);
+    anim->setDuration(kAnimationDuration);
+    anim->setStartValue(q->height());
+    anim->setEndValue(end_value);
+    QObject::connect(anim, &QVariantAnimation::valueChanged, q, [q](const QVariant &value) {
+        q->resize(q->width(), value.toInt());
+    });
+    if (end_value == kDefaultHeight) {
+        QObject::connect(anim, &QAbstractAnimation::finished, q, [this] {
+            this->clearAndHideMessages();
+        });
+    }
+}
+
+void QtTextInputPrivate::clearAndHideMessages() {
+    Q_Q(QtTextInput);
+    this->info_label->clear();
+    this->error_label->clear();
+    this->info_label->hide();
+    this->error_label->hide();
 }
 
 FNRICE_QT_WIDGETS_END_NAMESPACE

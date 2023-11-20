@@ -41,6 +41,7 @@ class QtTextInputPrivate {
     QAbstractButton *left_button = nullptr, *right_button = nullptr;
 
     // layout
+    QWidget *input_container = nullptr;
     QHBoxLayout *input_layout = nullptr;
     QVBoxLayout *main_layout = nullptr;
 
@@ -69,7 +70,10 @@ class QtTextInputPrivate {
     QCursor old_cursor;
 
     // animations
-    QVariantAnimation *bd_animation = nullptr, *bg_animation = nullptr;
+    QVariantAnimation
+        *bd_animation = nullptr,
+        *bg_animation = nullptr,
+        *msg_animation = nullptr;
 
  public:
     void playShowMessageAnimation();
@@ -79,7 +83,9 @@ class QtTextInputPrivate {
 
  public:
     void copyAndSelectAll();
-    void createOrStopAnim(QVariantAnimation *&anim, const QColor &start_color);
+    void createOrStopColorAnim(QVariantAnimation *&anim, QColor &target);
+    void createOrStopHeightAnim(QVariantAnimation *&anim, int end_value);
+    void clearAndHideMessages();
 
  private:
     Q_DECLARE_PUBLIC(QtTextInput);
