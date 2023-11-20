@@ -30,7 +30,7 @@ static auto constexpr kTestStyleSheet = R"(
 }
 
 #text_input {
-    background-color: #FF0000;
+    background: #FF0000;
 }
 )";
 

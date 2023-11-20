@@ -493,24 +493,24 @@ void QtTextInputPrivate::playHideMessageAnimation() {
 
 void QtTextInputPrivate::playBorderAnimation() {
     Q_Q(QtTextInput);
-    this->createOrStopAnim(this->border_animation, this->p_border);
+    this->createOrStopAnim(this->bd_animation, this->p_border);
     if (!q->isEnabled()) {
-        this->border_animation->setEndValue(this->border_color.disabled);
+        this->bd_animation->setEndValue(this->border_color.disabled);
     } else if (this->has_error) {
-        this->border_animation->setEndValue(this->border_color.error);
+        this->bd_animation->setEndValue(this->border_color.error);
     } else if (q->hasFocus() || this->line_edit->hasFocus()) {
-        this->border_animation->setEndValue(this->border_color.focus);
+        this->bd_animation->setEndValue(this->border_color.focus);
     } else {
-        this->border_animation->setEndValue(this->border_color.normal);
+        this->bd_animation->setEndValue(this->border_color.normal);
     }
-    this->border_animation->start();
+    this->bd_animation->start();
 }
 
 void QtTextInputPrivate::playBackgroundAnimation() {
     Q_Q(QtTextInput);
-    this->p_bg = q->palette().color(q->backgroundRole());
-    q->update();
-    // TODO: add animation
+    this->createOrStopAnim(this->bg_animation, this->p_bg);
+    this->bg_animation->setEndValue(q->palette().color(q->backgroundRole()));
+    this->bg_animation->start();
 }
 
 void QtTextInputPrivate::copyAndSelectAll() {

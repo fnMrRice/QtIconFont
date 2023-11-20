@@ -67,7 +67,7 @@ class QtTextInputPrivate {
     QCursor old_cursor;
 
     // animations
-    QVariantAnimation *border_animation = nullptr;
+    QVariantAnimation *bd_animation = nullptr, *bg_animation = nullptr;
 
  public:
     void playShowMessageAnimation();
