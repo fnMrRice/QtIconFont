@@ -136,22 +136,26 @@ void QtTextInput::setLeftButton(QAbstractButton *button) {
     Q_D(QtTextInput);
     if (d->left_button) {
         d->input_layout->removeWidget(d->left_button);
+        d->left_button->disconnect(this);
         d->left_button->setParent(nullptr);
         d->left_button->deleteLater();
     }
     d->left_button = button;
     d->input_layout->insertWidget(0, button);
+    connect(d->left_button, &QAbstractButton::clicked, this, &QtTextInput::leftButtonClicked);
 }
 
 void QtTextInput::setRightButton(QAbstractButton *button) {
     Q_D(QtTextInput);
     if (d->right_button) {
         d->input_layout->removeWidget(d->right_button);
+        d->right_button->disconnect(this);
         d->right_button->setParent(nullptr);
         d->right_button->deleteLater();
     }
     d->right_button = button;
     d->input_layout->addWidget(button);
+    connect(d->right_button, &QAbstractButton::clicked, this, &QtTextInput::rightButtonClicked);
 }
 
 QString QtTextInput::text() const {

@@ -82,6 +82,8 @@ class QtTextInput : public QWidget {
     void textChanged(const QString &text);
     void textEdited(const QString &text);
     void returnPressed();
+    void leftButtonClicked(bool checked);
+    void rightButtonClicked(bool checked);
 
  private:
     Q_DECLARE_PRIVATE(QtTextInput);
