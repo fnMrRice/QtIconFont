@@ -38,6 +38,8 @@ class QtTextInput : public QWidget {
     Q_PROPERTY(QString errorMessage READ errorMessage WRITE setErrorMessage)
     Q_PROPERTY(bool hasError READ hasError)
     Q_PROPERTY(const QValidator *validator READ validator WRITE setValidator)
+    Q_PROPERTY(QAbstractButton * leftButton READ leftButton WRITE setLeftButton)
+    Q_PROPERTY(QAbstractButton * rightButton READ rightButton WRITE setRightButton)
 
     void setText(const QString &text);
     void setPlaceholderText(const QString &text);

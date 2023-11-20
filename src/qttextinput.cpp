@@ -135,21 +135,23 @@ void QtTextInput::setValidator(const QValidator *validator) {
 void QtTextInput::setLeftButton(QAbstractButton *button) {
     Q_D(QtTextInput);
     if (d->left_button) {
+        d->input_layout->removeWidget(d->left_button);
         d->left_button->setParent(nullptr);
         d->left_button->deleteLater();
     }
     d->left_button = button;
-    // TODO: add left button to layout left
+    d->input_layout->insertWidget(0, button);
 }
 
 void QtTextInput::setRightButton(QAbstractButton *button) {
     Q_D(QtTextInput);
     if (d->right_button) {
+        d->input_layout->removeWidget(d->right_button);
         d->right_button->setParent(nullptr);
         d->right_button->deleteLater();
     }
     d->right_button = button;
-    // TODO: add left button to layout right
+    d->input_layout->addWidget(button);
 }
 
 QString QtTextInput::text() const {
