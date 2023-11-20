@@ -12,6 +12,19 @@ FNRICE_QT_WIDGETS_USE_NAMESPACE
 #include <QVBoxLayout>
 #include <QVariantAnimation>
 
+static auto constexpr kMessageSpacing = 4;
+static auto constexpr kInputSpacing = 5;
+#define NO_BORDER_INPUT_MARGINS 0,6,0,6
+#define WITH_BORDER_INPUT_MARGINS 10,6,10,6
+static auto constexpr kLineEditStyle = "background: transparent; border: hidden;";
+static auto constexpr kInfoMessageStyle = "color: #666666; font-size: 12px;";
+static auto constexpr kErrorMessageStyle = "color: #F24951; font-size: 12px;";
+static auto constexpr kAnimationDuration = 200;
+static auto constexpr kDisabledBorderColor = "#F2F2F2";
+static auto constexpr kFocusBorderColor = "#3C6CFE";
+static auto constexpr kNormalBorderColor = "#E4E4E4";
+static auto constexpr kErrorBorderColor = "#F24951";
+
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
 class QtTextInputPrivate {
@@ -32,12 +45,17 @@ class QtTextInputPrivate {
     // border
     int border_width = 1;
     Qt::PenStyle border_style = Qt::SolidLine;
-    QColor border_color = QColor("#E4E4E4");
+    struct BorderColor_t {
+        QColor normal = QColor(kNormalBorderColor);
+        QColor focus = QColor(kFocusBorderColor);
+        QColor disabled = QColor(kDisabledBorderColor);
+        QColor error = QColor(kErrorBorderColor);
+    } border_color;
     int border_radius = 4;
 
     // present
     bool first_show = true;
-    QColor p_border = border_color, p_bg, p_text;
+    QColor p_border = border_color.normal, p_bg, p_text;
     int p_msg_h = 0;
 
     // message

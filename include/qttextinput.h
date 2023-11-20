@@ -17,6 +17,15 @@ class QtTextInput : public QWidget {
     explicit QtTextInput(QWidget *parent = nullptr);
     ~QtTextInput() override;
 
+ public: // enums
+    enum BorderType {
+        BorderNormal = 0,
+        BorderDisabled,
+        BorderFocus,
+        BorderError,
+    };
+    Q_ENUM(BorderType)
+
  public: // border style setters
     Q_PROPERTY(int borderWidth READ borderWidth WRITE setBorderWidth)
     Q_PROPERTY(Qt::PenStyle borderStyle READ borderStyle WRITE setBorderStyle)
@@ -25,10 +34,12 @@ class QtTextInput : public QWidget {
     void setBorderWidth(int width);
     void setBorderStyle(Qt::PenStyle style);
     void setBorderRadius(int radius);
+    void setBorderColor(QtTextInput::BorderType type, const QColor &color);
 
     [[nodiscard]] int borderWidth() const;
     [[nodiscard]] Qt::PenStyle borderStyle() const;
     [[nodiscard]] int borderRadius() const;
+    [[nodiscard]] QColor borderColor(QtTextInput::BorderType type) const;
 
  public: // normal attributes
     Q_PROPERTY(QString text READ text WRITE setText)

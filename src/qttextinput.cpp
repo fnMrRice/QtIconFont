@@ -6,19 +6,6 @@
 #include <QApplication>
 #include <QMouseEvent>
 
-static auto constexpr kMessageSpacing = 4;
-static auto constexpr kInputSpacing = 5;
-#define NO_BORDER_INPUT_MARGINS 0,6,0,6
-#define WITH_BORDER_INPUT_MARGINS 10,6,10,6
-static auto constexpr kLineEditStyle = "background: transparent; border: hidden;";
-static auto constexpr kInfoMessageStyle = "color: #666666; font-size: 12px;";
-static auto constexpr kErrorMessageStyle = "color: #F24951; font-size: 12px;";
-static auto constexpr kAnimationDuration = 200;
-static auto constexpr kDisabledBorderColor = "#F2F2F2";
-static auto constexpr kFocusBorderColor = "#3C6CFE";
-static auto constexpr kNormalBorderColor = "#E4E4E4";
-static auto constexpr kErrorBorderColor = "#F24951";
-
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
 QtTextInput::QtTextInput(QWidget *parent)
@@ -61,6 +48,24 @@ void QtTextInput::setBorderStyle(Qt::PenStyle style) {
 void QtTextInput::setBorderRadius(int radius) {
     Q_D(QtTextInput);
     d->border_radius = radius;
+}
+
+void QtTextInput::setBorderColor(QtTextInput::BorderType type, const QColor &color) {
+    Q_D(QtTextInput);
+    switch (type) {
+        case QtTextInput::BorderNormal:
+            d->border_color.normal = color;
+            break;
+        case QtTextInput::BorderDisabled:
+            d->border_color.disabled = color;
+            break;
+        case QtTextInput::BorderFocus:
+            d->border_color.focus = color;
+            break;
+        case QtTextInput::BorderError:
+            d->border_color.error = color;
+            break;
+    }
 }
 
 int QtTextInput::borderWidth() const {
@@ -490,13 +495,13 @@ void QtTextInputPrivate::playBorderAnimation() {
     Q_Q(QtTextInput);
     this->createOrStopAnim(this->border_animation, this->p_border);
     if (!q->isEnabled()) {
-        this->border_animation->setEndValue(QColor(kDisabledBorderColor));
+        this->border_animation->setEndValue(this->border_color.disabled);
     } else if (this->has_error) {
-        this->border_animation->setEndValue(QColor(kErrorBorderColor));
+        this->border_animation->setEndValue(this->border_color.error);
     } else if (q->hasFocus() || this->line_edit->hasFocus()) {
-        this->border_animation->setEndValue(QColor(kFocusBorderColor));
+        this->border_animation->setEndValue(this->border_color.focus);
     } else {
-        this->border_animation->setEndValue(QColor(kNormalBorderColor));
+        this->border_animation->setEndValue(this->border_color.normal);
     }
     this->border_animation->start();
 }
