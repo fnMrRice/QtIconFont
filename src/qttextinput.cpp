@@ -5,14 +5,13 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QMouseEvent>
+#include <QDebug>
 
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
 QtTextInput::QtTextInput(QWidget *parent)
     : QWidget(parent), d_ptr(new QtTextInputPrivate(this)) {
     Q_D(QtTextInput);
-
-    this->setObjectName("QtTextInput");
 
     this->setLayout(d->main_layout);
     this->setCursor(Qt::IBeamCursor);
@@ -81,6 +80,22 @@ Qt::PenStyle QtTextInput::borderStyle() const {
 int QtTextInput::borderRadius() const {
     Q_D(const QtTextInput);
     return d->border_radius;
+}
+
+QColor QtTextInput::borderColor(QtTextInput::BorderType type) const {
+    Q_D(const QtTextInput);
+    switch (type) {
+        case BorderNormal:
+            return d->border_color.normal;
+        case BorderDisabled:
+            return d->border_color.disabled;
+        case BorderError:
+            return d->border_color.error;
+        case BorderFocus:
+            return d->border_color.focus;
+        default:
+            return {};
+    }
 }
 
 void QtTextInput::setText(const QString &text) {
@@ -412,7 +427,6 @@ void QtTextInput::paintEvent(QPaintEvent *event) {
         painter.restore();
         return;
     }
-//    qDebug("event->rect() = (%d, %d, %dx%d)", event->rect().left(), event->rect().top(), event->rect().width(), event->rect().height());
 
     painter.save();
     auto pen = painter.pen();
@@ -426,6 +440,7 @@ void QtTextInput::paintEvent(QPaintEvent *event) {
     // draw rounded rect
     auto rect = this->rect();
     rect.setHeight(kDefaultHeight);
+//    qDebug() << "event->rect()=" << event->rect() << "rect=" << rect;
     painter.drawRoundedRect(rect, this->borderRadius(), this->borderRadius());
 
     painter.restore();

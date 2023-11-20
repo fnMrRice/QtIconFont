@@ -16,7 +16,7 @@ class QtImageWidget : public QWidget {
     ~QtImageWidget() override;
 
  public:
-    // basic property
+    // basic properties
     Q_PROPERTY(QPixmap pixmap WRITE setPixmap READ pixmap)
     // border properties
     Q_PROPERTY(int borderWidth WRITE setBorderWidth READ borderWidth)
@@ -30,15 +30,15 @@ class QtImageWidget : public QWidget {
     Q_PROPERTY(QSize imageMaximumPixelSize WRITE setImageMaximumPixelSize READ imageMaximumPixelSize)
     Q_PROPERTY(int imageMaximumPercent WRITE setImageMaximumPercent READ imageMaximumPercent)
 
- public:
-    // basic property
+ public: // ------ basic properties
     /**
      * @brief set background pixmap
      * @param [in] pixmap pixmap
      */
     void setPixmap(const QPixmap &pixmap);
     [[nodiscard]] QPixmap pixmap() const;
-    // border properties
+
+ public: // ------ border properties
     /**
      * @brief set border width for all directions
      * @param [in] width border width
@@ -63,7 +63,8 @@ class QtImageWidget : public QWidget {
      */
     void setBorderRadius(int radius);
     [[nodiscard]] int borderRadius() const;
-    // image properties
+
+ public: // ------ image properties
     /**
      * @brief set image aspect ratio mode
      * @param [in] mode see <a href="https://doc.qt.io/qt-5/qt.html#AspectRatioMode-enum">qt document</a> for more information
@@ -93,14 +94,14 @@ class QtImageWidget : public QWidget {
     void setImageMaximumPixelSize(const QSize &size);
     [[nodiscard]] QSize imageMaximumPixelSize() const;
     /**
-    * @brief set maximum image size percent
-    * @param [in] percent set to a value less or equal than 0 means not limited. the default value is 100.
+     * @brief set maximum image size percent
+     * @param [in] percent set to a value less or equal than 0 means not limited. the default value is 100.
      * @brief if both imageMaximumPixelSize and imageMaximumPercent are set, <br>
      *        it will calculate the real size and use the smaller one.<br>
      *        if calculated maximum size is smaller than imageMinimumPixelSize, <br>
      *        it will use imageMinimumPixelSize. <br>
      *        there is no imageMinimumPercent attribute since it's useless.
-    */
+     */
     void setImageMaximumPercent(int percent);
     [[nodiscard]] int imageMaximumPercent() const;
     /**
