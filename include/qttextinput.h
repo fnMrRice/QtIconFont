@@ -111,8 +111,6 @@ class QtTextInput : public QWidget {
     void textChanged(const QString &text);
     void textEdited(const QString &text);
     void returnPressed();
-    void leftButtonClicked(bool checked);
-    void rightButtonClicked(bool checked);
     void textCopied(const QString &text);
 
  private:
