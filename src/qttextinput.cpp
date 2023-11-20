@@ -5,7 +5,6 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QMouseEvent>
-#include <QLineEdit>
 
 static auto constexpr kMessageSpacing = 4;
 static auto constexpr kInputSpacing = 5;
@@ -14,6 +13,11 @@ static auto constexpr kInputSpacing = 5;
 static auto constexpr kLineEditStyle = "background: transparent; border: hidden;";
 static auto constexpr kInfoMessageStyle = "color: #666666; font-size: 12px;";
 static auto constexpr kErrorMessageStyle = "color: #F24951; font-size: 12px;";
+static auto constexpr kAnimationDuration = 200;
+static auto constexpr kDisabledBorderColor = "#F2F2F2";
+static auto constexpr kFocusBorderColor = "#3C6CFE";
+static auto constexpr kNormalBorderColor = "#E4E4E4";
+static auto constexpr kErrorBorderColor = "#F24951";
 
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
@@ -479,18 +483,17 @@ void QtTextInputPrivate::playHideMessageAnimation() {
 
 void QtTextInputPrivate::playBorderAnimation() {
     Q_Q(QtTextInput);
+    this->createOrStopAnim(this->border_animation, this->p_border);
     if (!q->isEnabled()) {
-        // disabled_color
-        this->p_border = QColor("#F2F2F2");
+        this->border_animation->setEndValue(QColor(kDisabledBorderColor));
     } else if (this->has_error) {
-        this->p_border = QColor("#F24951");
+        this->border_animation->setEndValue(QColor(kErrorBorderColor));
     } else if (q->hasFocus() || this->line_edit->hasFocus()) {
-        this->p_border = QColor("#3C6CFE");
+        this->border_animation->setEndValue(QColor(kFocusBorderColor));
     } else {
-        this->p_border = QColor("#E4E4E4");
+        this->border_animation->setEndValue(QColor(kNormalBorderColor));
     }
-    q->update();
-    // TODO: add animation
+    this->border_animation->start();
 }
 
 void QtTextInputPrivate::playBackgroundAnimation() {
@@ -512,6 +515,22 @@ void QtTextInputPrivate::copyAndSelectAll() {
                 emit q->textCopied(text);
             }
         }
+    }
+}
+
+void QtTextInputPrivate::createOrStopAnim(QVariantAnimation *&anim, const QColor &start_color) {
+    Q_Q(QtTextInput);
+    if (anim) {
+        anim->stop();
+        anim->setStartValue(start_color);
+    } else {
+        anim = new QVariantAnimation(q);
+        anim->setDuration(kAnimationDuration);
+        anim->setStartValue(start_color);
+        QObject::connect(anim, &QVariantAnimation::valueChanged, q, [this, q](const QVariant &color) {
+            this->p_border = color.value<QColor>();
+            q->update();
+        });
     }
 }
 

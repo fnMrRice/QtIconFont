@@ -10,6 +10,7 @@ FNRICE_QT_WIDGETS_USE_NAMESPACE
 #include <QAbstractButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QVariantAnimation>
 
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
@@ -47,6 +48,9 @@ class QtTextInputPrivate {
     bool copy_on_read_only = true;
     QCursor old_cursor;
 
+    // animations
+    QVariantAnimation *border_animation = nullptr;
+
  public:
     void playShowMessageAnimation();
     void playHideMessageAnimation();
@@ -55,6 +59,7 @@ class QtTextInputPrivate {
 
  public:
     void copyAndSelectAll();
+    void createOrStopAnim(QVariantAnimation *&anim, const QColor &start_color);
 
  private:
     Q_DECLARE_PUBLIC(QtTextInput);
