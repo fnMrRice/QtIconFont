@@ -5,6 +5,7 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QMouseEvent>
+#include <QTimer>
 #include <QDebug>
 
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
@@ -281,6 +282,13 @@ void QtTextInput::setCopyOnReadOnly(bool enable) {
     }
 }
 
+void QtTextInput::setCopyHint(const QString &hint) {
+    Q_D(QtTextInput);
+    d->copy_hint->setText(hint);
+    d->copy_hint->adjustSize();
+    d->updateCopyHintPosition();
+}
+
 QString QtTextInput::text() const {
     Q_D(const QtTextInput);
     return d->line_edit->text();
@@ -345,6 +353,11 @@ bool QtTextInput::isReadOnly() const {
 bool QtTextInput::isCopyOnReadOnly() const {
     Q_D(const QtTextInput);
     return d->copy_on_read_only;
+}
+
+QString QtTextInput::copyHint() const {
+    Q_D(const QtTextInput);
+    return d->copy_hint->text();
 }
 
 void QtTextInput::selectAll() {
@@ -420,6 +433,12 @@ void QtTextInput::showEvent(QShowEvent *event) {
     QWidget::showEvent(event);
 }
 
+void QtTextInput::resizeEvent(QResizeEvent *event) {
+    Q_D(QtTextInput);
+    d->updateCopyHintPosition();
+    QWidget::resizeEvent(event);
+}
+
 void QtTextInput::changeEvent(QEvent *event) {
     Q_D(QtTextInput);
     switch (event->type()) {
@@ -482,6 +501,9 @@ void QtTextInput::mouseReleaseEvent(QMouseEvent *event) {
     Q_D(QtTextInput);
     if (this->underMouse()) {
         d->line_edit->setFocus();
+        if (this->isReadOnly() && d->copy_on_read_only) {
+            d->copyAndSelectAll();
+        }
     }
     QWidget::mouseReleaseEvent(event);
 }
@@ -491,15 +513,17 @@ bool QtTextInput::eventFilter(QObject *watched, QEvent *event) {
     if (watched == d->line_edit) {
         switch (event->type()) {
             case QEvent::FocusIn:
-                d->playBorderAnimation();
-                d->playBackgroundAnimation();
-                if (this->isReadOnly() && d->copy_on_read_only) {
-                    d->copyAndSelectAll();
-                }
-                break;
+                [[fallthrough]];
             case QEvent::FocusOut:
                 d->playBorderAnimation();
                 d->playBackgroundAnimation();
+                return false;
+            case QEvent::MouseButtonRelease:
+                if (this->underMouse()) {
+                    if (this->isReadOnly() && d->copy_on_read_only) {
+                        d->copyAndSelectAll();
+                    }
+                }
                 return false;
             default:
                 break;
@@ -548,6 +572,31 @@ QtTextInputPrivate::QtTextInputPrivate(QtTextInput *q) : q_ptr(q) {
     this->main_layout->setStretch(0, kDefaultHeight);
     this->main_layout->setStretch(1, kHeightWithMessage - kDefaultHeight);
     this->main_layout->setStretch(2, kHeightWithMessage - kDefaultHeight);
+
+    this->copy_hint = new QLabel(q);
+    this->copy_hint->setStyleSheet(kCopyHintStyleSheet);
+    this->copy_hint->setFixedHeight(kCopyHintHeight);
+    this->copy_hint->setAlignment(Qt::AlignCenter);
+    this->copy_hint->setText(QObject::tr("copied!"));
+    this->copy_hint->adjustSize();
+    this->copy_hint->setAttribute(Qt::WA_TransparentForMouseEvents);
+
+    this->hint_effect = new QGraphicsOpacityEffect(this->copy_hint);
+    this->hint_effect->setOpacity(0);
+    this->copy_hint->setGraphicsEffect(this->hint_effect);
+
+    this->hint_anim = new QSequentialAnimationGroup(this->copy_hint);
+    auto *show_anim = new QPropertyAnimation(this->hint_effect, "opacity", this->hint_anim);
+    show_anim->setStartValue(0.0);
+    show_anim->setEndValue(1.0);
+    show_anim->setDuration(kAnimationDuration);
+    auto *hide_anim = new QPropertyAnimation(this->hint_effect, "opacity", this->hint_anim);
+    hide_anim->setStartValue(1.0);
+    hide_anim->setEndValue(0.0);
+    hide_anim->setDuration(kAnimationDuration);
+    this->hint_anim->addAnimation(show_anim);
+    this->hint_anim->addPause(kShowCopyHintDelay);
+    this->hint_anim->addAnimation(hide_anim);
 
     this->line_edit->installEventFilter(q);
 
@@ -624,6 +673,10 @@ void QtTextInputPrivate::copyAndSelectAll() {
     auto *clipboard = QApplication::clipboard();
     clipboard->setText(text);
     emit q->textCopied(text);
+
+    this->hint_anim->stop();
+    this->hint_anim->setDirection(QAbstractAnimation::Forward);
+    this->hint_anim->start();
 }
 
 void QtTextInputPrivate::createOrStopColorAnim(QVariantAnimation *&anim, QColor &target) {
@@ -685,6 +738,19 @@ void QtTextInputPrivate::clearAndHideMessages() {
     this->error_label->clear();
     this->info_label->hide();
     this->error_label->hide();
+}
+
+void QtTextInputPrivate::updateCopyHintPosition() {
+    Q_Q(QtTextInput);
+    auto h = kDefaultHeight;
+    auto y = (h - this->copy_hint->height()) / 2;
+    auto x = q->width() - this->copy_hint->width();
+    x -= kHorMargin;
+    if (this->right_button) {
+        x -= this->right_button->width();
+        x -= kInputSpacing;
+    }
+    this->copy_hint->move(x, y);
 }
 
 FNRICE_QT_WIDGETS_END_NAMESPACE

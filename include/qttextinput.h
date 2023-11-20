@@ -57,6 +57,7 @@ class QtTextInput : public QWidget {
     Q_PROPERTY(QLineEdit::EchoMode echoMode READ echoMode WRITE setEchoMode)
     Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly)
     Q_PROPERTY(bool copyOnReadOnly READ isCopyOnReadOnly WRITE setCopyOnReadOnly)
+    Q_PROPERTY(QString copyHint READ copyHint WRITE setCopyHint)
 
     void setText(const QString &text);
     void setPlaceholderText(const QString &text);
@@ -70,6 +71,7 @@ class QtTextInput : public QWidget {
     void setEchoMode(QLineEdit::EchoMode mode);
     void setReadOnly(bool readOnly);
     void setCopyOnReadOnly(bool enable);
+    void setCopyHint(const QString &hint);
 
     [[nodiscard]] QString text() const;
     [[nodiscard]] QString placeholderText() const;
@@ -84,6 +86,7 @@ class QtTextInput : public QWidget {
     [[nodiscard]] QLineEdit::EchoMode echoMode() const;
     [[nodiscard]] bool isReadOnly() const;
     [[nodiscard]] bool isCopyOnReadOnly() const;
+    [[nodiscard]] QString copyHint() const;
 
  public:
     Q_INVOKABLE void selectAll();
@@ -96,6 +99,7 @@ class QtTextInput : public QWidget {
 
  protected:
     void showEvent(QShowEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
     void changeEvent(QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
