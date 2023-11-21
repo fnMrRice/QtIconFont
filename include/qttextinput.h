@@ -35,7 +35,9 @@ class QtTextInput : public QWidget {
     void setBorderStyle(Qt::PenStyle style);
     void setBorderRadius(int radius);
     void setBorderColor(QtTextInput::InputState state, const QColor &color);
+    void setBorderColor(const QColor &color);
     void setBackgroundColor(QtTextInput::InputState state, const QColor &color);
+    void setBackgroundColor(const QColor &color);
 
     [[nodiscard]] int borderWidth() const;
     [[nodiscard]] Qt::PenStyle borderStyle() const;

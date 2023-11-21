@@ -66,6 +66,17 @@ void QtTextInput::setBorderColor(QtTextInput::InputState state, const QColor &co
             d->border_color.error = color;
             break;
     }
+    d->playBorderAnimation();
+}
+
+void QtTextInput::setBorderColor(const QColor &color) {
+    Q_D(QtTextInput);
+    d->border_color.normal = color;
+    d->border_color.disabled = color;
+    d->border_color.focus = color;
+    d->border_color.error = color;
+    d->p_border = color;
+    this->update();
 }
 
 void QtTextInput::setBackgroundColor(QtTextInput::InputState state, const QColor &color) {
@@ -84,6 +95,17 @@ void QtTextInput::setBackgroundColor(QtTextInput::InputState state, const QColor
             d->bg_color.error = color;
             break;
     }
+    d->playBackgroundAnimation();
+}
+
+void QtTextInput::setBackgroundColor(const QColor &color) {
+    Q_D(QtTextInput);
+    d->bg_color.normal = color;
+    d->bg_color.disabled = color;
+    d->bg_color.focus = color;
+    d->bg_color.error = color;
+    d->p_bg = color;
+    this->update();
 }
 
 int QtTextInput::borderWidth() const {
