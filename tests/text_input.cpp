@@ -51,28 +51,13 @@ int main(int argc, char *argv[]) {
     l_btn->setText("A");
     l_btn->setCursor(Qt::PointingHandCursor);
 
-    auto *r_btn = new QToolButton;
-    r_btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    r_btn->setText("B");
-    r_btn->setCursor(Qt::PointingHandCursor);
-    r_btn->setCheckable(true);
-
     auto *text_input = new QtTextInput(w);
     text_input->setObjectName("text_input");
     text_input->setLeftButton(l_btn);
     l->addWidget(text_input);
 
-    auto *text_input2 = new QtTextInput(w);
+    auto *text_input2 = new QtClearableInput(w);
     text_input->setObjectName("text_input2");
-    text_input2->setRightButton(r_btn);
-    text_input2->setEchoMode(QLineEdit::Password);
-    QObject::connect(r_btn, &QAbstractButton::toggled, text_input2, [&](bool checked) {
-        if (checked) {
-            text_input2->setEchoMode(QLineEdit::Normal);
-        } else {
-            text_input2->setEchoMode(QLineEdit::Password);
-        }
-    });
     l->addWidget(text_input2);
 
     auto *text_input3 = new QtTextInput(w);

@@ -7,6 +7,7 @@
 #include <QMouseEvent>
 #include <QTimer>
 #include <QDebug>
+#include <QToolButton>
 
 FNRICE_QT_WIDGETS_BEGIN_NAMESPACE
 
@@ -388,6 +389,11 @@ void QtTextInput::selectAll() {
     d->line_edit->selectAll();
 }
 
+void QtTextInput::clearText() {
+    Q_D(const QtTextInput);
+    d->line_edit->clear();
+}
+
 void QtTextInput::clearExtraMessage() {
     Q_D(QtTextInput);
     if (d->has_error) {
@@ -434,6 +440,12 @@ void QtTextInput::clearErrorMessage() {
     // clear message only, do not clear QLabel which shows the message. It will be used for animation
     d->has_error = false;
     d->error_message.clear();
+}
+
+void QtTextInput::clearAll() {
+    this->clearText();
+    this->clearErrorMessage();
+    this->clearExtraMessage();
 }
 
 QSize QtTextInput::sizeHint() const {
@@ -524,7 +536,9 @@ void QtTextInput::mouseReleaseEvent(QMouseEvent *event) {
     if (this->underMouse()) {
         d->line_edit->setFocus();
         if (this->isReadOnly() && d->copy_on_read_only) {
-            d->copyAndSelectAll();
+            if (event->button() == Qt::LeftButton) {
+                d->copyAndSelectAll();
+            }
         }
     }
     QWidget::mouseReleaseEvent(event);
@@ -535,6 +549,7 @@ bool QtTextInput::eventFilter(QObject *watched, QEvent *event) {
     if (watched == d->line_edit) {
         switch (event->type()) {
             case QEvent::FocusIn:
+                this->selectAll();
                 [[fallthrough]];
             case QEvent::FocusOut:
                 d->playBorderAnimation();
@@ -543,7 +558,10 @@ bool QtTextInput::eventFilter(QObject *watched, QEvent *event) {
             case QEvent::MouseButtonRelease:
                 if (this->underMouse()) {
                     if (this->isReadOnly() && d->copy_on_read_only) {
-                        d->copyAndSelectAll();
+                        auto *e = dynamic_cast<QMouseEvent *>(event);
+                        if (e->button() == Qt::LeftButton) {
+                            d->copyAndSelectAll();
+                        }
                     }
                 }
                 return false;
@@ -790,5 +808,70 @@ QtTextOutput::QtTextOutput(const QString &text, QWidget *parent) : QtTextInput(p
 }
 
 QtTextOutput::~QtTextOutput() = default;
+
+class QtClearableInputPrivate {
+ public:
+    QToolButton *clear_btn = nullptr;
+    QGraphicsOpacityEffect *clear_effect = nullptr;
+    QPropertyAnimation *opacity_anim = nullptr;
+    QPixmap clear_pixmap;
+};
+
+QtClearableInput::QtClearableInput(QWidget *parent) : QtTextInput(parent), d_ptr(new QtClearableInputPrivate) {
+    Q_D(QtClearableInput);
+    d->clear_btn = new QToolButton;
+    d->clear_btn->setCursor(Qt::PointingHandCursor);
+    d->clear_btn->setStyleSheet("border: hidden; background: none;");
+    d->clear_effect = new QGraphicsOpacityEffect;
+    d->opacity_anim = new QPropertyAnimation(d->clear_effect, "opacity", this);
+    d->opacity_anim->setStartValue(0.0);
+    d->opacity_anim->setEndValue(1.0);
+    d->opacity_anim->setDuration(kAnimationDuration);
+    d->clear_btn->setGraphicsEffect(d->clear_effect);
+    this->setRightButton(d->clear_btn);
+    d->clear_btn->hide();
+
+    connect(d->clear_btn, &QAbstractButton::clicked, this, [this] {
+        this->clearText();
+        emit textEdited("");
+    });
+    connect(d->opacity_anim, &QAbstractAnimation::finished, this, [d] {
+        if (d->opacity_anim->direction() == QAbstractAnimation::Backward) {
+            d->clear_btn->hide();
+        }
+    });
+}
+
+QtClearableInput::~QtClearableInput() {
+    delete d_ptr;
+}
+
+void QtClearableInput::setClearButtonPixmap(const QPixmap &pixmap) {
+    Q_D(QtClearableInput);
+    d->clear_pixmap = pixmap;
+    d->clear_btn->setIcon(pixmap);
+}
+
+QPixmap QtClearableInput::clearButtonPixmap() const {
+    Q_D(const QtClearableInput);
+    return d->clear_pixmap;
+}
+
+void QtClearableInput::enterEvent(QEvent *event) {
+    Q_D(QtClearableInput);
+    d->clear_btn->show();
+    d->opacity_anim->stop();
+    d->opacity_anim->setDirection(QAbstractAnimation::Forward);
+    d->opacity_anim->start();
+    QtTextInput::enterEvent(event);
+}
+
+void QtClearableInput::leaveEvent(QEvent *event) {
+    Q_D(QtClearableInput);
+    d->opacity_anim->stop();
+    d->opacity_anim->setDirection(QAbstractAnimation::Backward);
+    d->opacity_anim->start();
+    QtTextInput::leaveEvent(event);
+}
 
 FNRICE_QT_WIDGETS_END_NAMESPACE

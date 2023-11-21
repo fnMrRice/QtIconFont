@@ -61,19 +61,19 @@ class QtTextInput : public QWidget {
     Q_PROPERTY(bool copyOnReadOnly READ isCopyOnReadOnly WRITE setCopyOnReadOnly)
     Q_PROPERTY(QString copyHint READ copyHint WRITE setCopyHint)
 
-    void setText(const QString &text);
-    void setPlaceholderText(const QString &text);
-    void setMaxLength(int length);
-    void setAlignment(Qt::Alignment alignment);
-    void setExtraMessage(const QString &message);
-    void setErrorMessage(const QString &message);
-    void setValidator(const QValidator *validator);
-    void setLeftButton(QAbstractButton *button);
-    void setRightButton(QAbstractButton *button);
-    void setEchoMode(QLineEdit::EchoMode mode);
-    void setReadOnly(bool readOnly);
-    void setCopyOnReadOnly(bool enable);
-    void setCopyHint(const QString &hint);
+    void setText(const QString &text); // same as QLineEdit
+    void setPlaceholderText(const QString &text); // same as QLineEdit
+    void setMaxLength(int length); // same as QLineEdit
+    void setAlignment(Qt::Alignment alignment); // same as QLineEdit
+    void setExtraMessage(const QString &message); // extra message, which will be shown under the input
+    void setErrorMessage(const QString &message); // error message, which will be shown under the input, it has higher priority than the extra message
+    void setValidator(const QValidator *validator); // same as QLineEdit
+    void setLeftButton(QAbstractButton *button); // left button, which will be shown before the input
+    void setRightButton(QAbstractButton *button); // right button, which will be shown after the input
+    void setEchoMode(QLineEdit::EchoMode mode); // same as QLineEdit
+    void setReadOnly(bool readOnly); // same as QLineEdit
+    void setCopyOnReadOnly(bool enable); // whether it will copy the content when it is clicked when it is readonly or not
+    void setCopyHint(const QString &hint); // set copy message, will be shown after text copied on the text end. useful when you want to translate to other languages without qt linguist
 
     [[nodiscard]] QString text() const;
     [[nodiscard]] QString placeholderText() const;
@@ -92,28 +92,30 @@ class QtTextInput : public QWidget {
 
  public:
     Q_INVOKABLE void selectAll();
+    Q_INVOKABLE void clearText();
     Q_INVOKABLE void clearExtraMessage();
     Q_INVOKABLE void clearErrorMessage();
+    Q_INVOKABLE void clearAll();
 
  public:
     [[nodiscard]] QSize sizeHint() const override;
     [[nodiscard]] QSize minimumSizeHint() const override;
 
  protected:
-    void showEvent(QShowEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
-    void changeEvent(QEvent *event) override;
-    void focusInEvent(QFocusEvent *event) override;
-    void paintEvent(QPaintEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    bool eventFilter(QObject *watched, QEvent *event) override;
+    void showEvent(QShowEvent *event) override; // not used yet
+    void resizeEvent(QResizeEvent *event) override; // to move left/right buttons
+    void changeEvent(QEvent *event) override; // for border/bg change
+    void focusInEvent(QFocusEvent *event) override; // for border/bg change
+    void paintEvent(QPaintEvent *event) override; // for border/bg change
+    void mousePressEvent(QMouseEvent *event) override; // for border/bg change
+    void mouseReleaseEvent(QMouseEvent *event) override; // for border/bg change
+    bool eventFilter(QObject *watched, QEvent *event) override; // installed for internal QLineEdit
 
  Q_SIGNALS:
-    void textChanged(const QString &text);
-    void textEdited(const QString &text);
-    void returnPressed();
-    void textCopied(const QString &text);
+    void textChanged(const QString &text); // same as QLineEdit
+    void textEdited(const QString &text); // same as QLineEdit
+    void returnPressed(); // same as QLineEdit
+    void textCopied(const QString &text); // when clicked and copied, this signal will be emitted
 
  private:
     Q_DECLARE_PRIVATE(QtTextInput);
@@ -129,6 +131,35 @@ class QtTextOutput : public QtTextInput {
     // call setCopyHint(QString) for chinese
     // call setStyleSheet("color: color;") for text color
     // call setCopyOnReadOnly(bool) for enable/disable copy on click
+};
+
+class QtClearableInputPrivate;
+
+/**
+ * @brief A input with a clear button at right
+ */
+class QtClearableInput : public QtTextInput {
+ public:
+    explicit QtClearableInput(QWidget *parent = nullptr);
+    ~QtClearableInput() override;
+
+ public:
+    Q_PROPERTY(QPixmap clearButtonPixmap READ clearButtonPixmap WRITE setClearButtonPixmap)
+
+    /**
+     * @brief set clear button pixmap, it must be set before use, otherwise it shows noting
+     * @param [in] pixmap
+     */
+    void setClearButtonPixmap(const QPixmap &pixmap);
+    [[nodiscard]] QPixmap clearButtonPixmap() const;
+
+ protected:
+    void enterEvent(QEvent *event) override; // for show animation
+    void leaveEvent(QEvent *event) override; // for hide animation
+
+ private:
+    Q_DECLARE_PRIVATE(QtClearableInput);
+    QtClearableInputPrivate *d_ptr;
 };
 
 FNRICE_QT_WIDGETS_END_NAMESPACE
