@@ -781,4 +781,14 @@ void QtTextInputPrivate::updateCopyHintPosition() {
     this->copy_hint->move(x, y);
 }
 
+QtTextOutput::QtTextOutput(const QString &text, QWidget *parent) : QtTextInput(parent) {
+    this->setReadOnly(true);
+    this->setText(text);
+    this->setBorderStyle(Qt::NoPen);
+    this->setBackgroundColor(Qt::transparent);
+    this->setMaximumHeight(36);
+}
+
+QtTextOutput::~QtTextOutput() = default;
+
 FNRICE_QT_WIDGETS_END_NAMESPACE

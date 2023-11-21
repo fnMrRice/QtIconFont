@@ -120,6 +120,17 @@ class QtTextInput : public QWidget {
     QtTextInputPrivate *d_ptr;
 };
 
+class QtTextOutput : public QtTextInput {
+ public:
+    explicit QtTextOutput(const QString &text, QWidget *parent = nullptr);
+    ~QtTextOutput() override;
+
+    // ------ helpful notes
+    // call setCopyHint(QString) for chinese
+    // call setStyleSheet("color: color;") for text color
+    // call setCopyOnReadOnly(bool) for enable/disable copy on click
+};
+
 FNRICE_QT_WIDGETS_END_NAMESPACE
 
 #endif //QTWIDGETS_SRC_QTTEXTINPUT_H_
