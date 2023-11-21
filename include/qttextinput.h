@@ -139,6 +139,7 @@ class QtClearableInputPrivate;
  * @brief A input with a clear button at right
  */
 class QtClearableInput : public QtTextInput {
+ Q_OBJECT
  public:
     explicit QtClearableInput(QWidget *parent = nullptr);
     ~QtClearableInput() override;
